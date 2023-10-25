@@ -5,6 +5,7 @@ import {User} from '@element-plus/icons-vue'
 import TcButtonConform from "@/components/button/tc-button-conform.vue";
 import axios from "axios";
 import {ElMessage} from "element-plus";
+import TcButtonInfo from "@/components/button/tc-button-info.vue";
 
 const loginInfo = reactive({
   username:'',
@@ -15,26 +16,32 @@ const next = () => {
   passwordShow.value = true
 }
 const login = async () => {
-  alert(JSON.stringify(loginInfo))
   axios.post('http://localhost:8180/api/user/v1/auth', loginInfo).then(res => {
-    if (res.code !== 2002){
-      ElMessage.error(res.msg)
+    if (res.data.code !== 2002){
+      ElMessage.error(res.data.msg)
+      whenLoginError()
+    }else {
+      const authInfo = res.data.data
+      const {uid, username, access_token, auth_name} = authInfo
+      sessionStorage.setItem("uid", uid)
+      sessionStorage.setItem("username", username)
+      sessionStorage.setItem("access_token", access_token)
+      sessionStorage.setItem("auth_name", auth_name)
+      ElMessage.success("登录成功")
+      setTimeout(()=>{
+        switch (sessionStorage.getItem("auth_name")){
+          case "admin":
+            window.location.href = "/admin/user"
+        }
+      },1000)
     }
-    const authInfo = res.data
-    sessionStorage.setItem("uid", authInfo.uid)
-    sessionStorage.setItem("username", authInfo.username)
-    sessionStorage.setItem("access_token", authInfo.access_token)
-    sessionStorage.setItem("auth_name", authInfo.auth_name)
-    ElMessage.success("登录成功")
-    setTimeout(()=>{
-      switch (sessionStorage.getItem("auth_name")){
-        case "admin":
-          window.local.href = "/admin/user"
-      }
-    })
   })
 }
 
+const whenLoginError = () => {
+  passwordShow.value = false
+  loginInfo.password = ""
+}
 
 </script>
 
@@ -88,7 +95,7 @@ const login = async () => {
                 trigger="click"
             >
               <template #reference>
-                <el-button text style="color: #2C6AE3">了解详情</el-button>
+                <tc-button-info>了解详情</tc-button-info>
               </template>
               <span>本客户端账号由管理员分配，如员工需使用此服务，请先联系平台管理员</span>
             </el-popover>

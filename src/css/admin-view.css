@@ -1,0 +1,20 @@
+.menu-card{
+    height: 100vh;
+
+}
+.menu-logo{
+    user-select: none;
+    font-family: 微软雅黑, system-ui;
+    font-weight: bolder;
+    color: #001c64;
+    font-size: 1.5rem;
+}
+.container-card{
+    height: 100vh;
+}
+:deep(.el-menu-item.is-active){
+    color: #002fa7;
+}
+:deep(.el-menu) {
+    border-right:none
+}
