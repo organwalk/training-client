@@ -8,7 +8,8 @@ const router =createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    if (!sessionStorage.getItem("access_token")) {
+    const accessToken = sessionStorage.getItem("access_token")
+    if (!accessToken) {
         if (to.fullPath === '/login'){
             next()
         }else {
@@ -18,7 +19,9 @@ router.beforeEach((to, from, next) => {
             },1000)
         }
     } else {
-        next()
+        if (sessionStorage.getItem('auth_name') === 'admin' && to.fullPath.startsWith('/admin/')){
+            next()
+        }
     }
 })
 

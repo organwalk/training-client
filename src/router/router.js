@@ -13,7 +13,17 @@ const routes = [
                 path : 'user',
                 name : 'adminUserManage',
                 component: () => import('@/view/admin-view/AdminUserManage.vue')
-            }
+            },
+            {
+                path : 'dept',
+                name : 'adminDeptManage',
+                component: () => import('@/view/admin-view/AdminDeptManage.vue')
+            },
+            {
+                path : 'resource',
+                name : 'adminResourceManage',
+                component: () => import('@/view/admin-view/AdminResourceManage.vue')
+            },
         ]
     },
 ]

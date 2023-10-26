@@ -3,6 +3,25 @@ import TcCardCenterContent from "@/components/card/tc-card-center-content.vue";
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
 import {User,Suitcase,Files,Bell,Reading} from '@element-plus/icons-vue'
 import TcCard from "@/components/card/tc-card.vue";
+import {useRoute} from "vue-router";
+import {computed} from "vue";
+
+const route = useRoute()
+const breadList = [
+  {
+    path:'/admin/user',
+    name:'用户管理'
+  },
+  {
+    path:'/admin/dept',
+    name:'部门管理'
+  },
+  {
+    path:'/admin/resource',
+    name:'资源管理'
+  },
+]
+const breadName = computed(() => breadList.find(item => item.path === route.path).name)
 
 </script>
 
@@ -18,17 +37,18 @@ import TcCard from "@/components/card/tc-card.vue";
 <!--        tab标签栏-->
         <tc-container-full-row>
           <el-menu
-              default-active="1"
+              default-active="user"
+              router
           >
-            <el-menu-item index="1">
+            <el-menu-item index="user">
               <el-icon><User/></el-icon>
               <template #title>用户管理</template>
             </el-menu-item>
-            <el-menu-item index="2">
+            <el-menu-item index="dept">
               <el-icon><Suitcase /></el-icon>
               <template #title>部门管理</template>
             </el-menu-item>
-            <el-menu-item index="3">
+            <el-menu-item index="resource">
               <el-icon><Files /></el-icon>
               <template #title>资源管理</template>
             </el-menu-item>
@@ -42,7 +62,7 @@ import TcCard from "@/components/card/tc-card.vue";
 <!--          顶部面包屑-->
           <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4">
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+              <el-breadcrumb-item>{{breadName}}</el-breadcrumb-item>
             </el-breadcrumb>
           </el-col>
           <el-col :xs="20" :sm="20" :md="20" :lg="20" :xl="20" align="right">
