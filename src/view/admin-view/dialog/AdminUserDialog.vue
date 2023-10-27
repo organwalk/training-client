@@ -12,7 +12,8 @@ import {ElMessage} from "element-plus";
 const props = defineProps({
   showUserDialog: Boolean,
   title:String,
-  uid:Number
+  uid:Number,
+  menuIndex:String
 })
 
 const loading = ref(true)
@@ -79,7 +80,7 @@ const getAuthListFromApi = async () => {
   if (res.code=== 5005){
     closeDialog()
   }else {
-    accountInfo.auth_id = res.data.find(item => item.authName === "none").id
+    accountInfo.auth_id = props.menuIndex
     authList.value = res.data
   }
 }
@@ -177,7 +178,6 @@ const checkFormObjFull = (obj) => {
       </el-form-item>
       <el-form-item label="真实姓名">
         <el-input v-model="accountInfo.real_name"
-                  onkeyup="this.value = this.value.replace(/[^\u4e00-\u9fa5]+$/, '')"
                   placeholder="请输入中文形式的真实姓名" minlength="2"/>
       </el-form-item>
       <el-form-item label="手机号码">

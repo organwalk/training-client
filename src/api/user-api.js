@@ -1,6 +1,8 @@
 import http from "@/api/http";
 
-//获取权限列表
+// 获取用户登录url
+export const authUrl = 'http://localhost:8180/api/user/v1/auth'
+// 获取权限列表
 export function getAuthList(){
     return http.get('/user/v3/auth')
 }

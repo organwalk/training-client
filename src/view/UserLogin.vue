@@ -6,6 +6,7 @@ import TcButtonConform from "@/components/button/tc-button-conform.vue";
 import axios from "axios";
 import {ElMessage} from "element-plus";
 import TcButtonInfo from "@/components/button/tc-button-info.vue";
+import {authUrl} from "@/api/user-api";
 
 const loginInfo = reactive({
   username:'',
@@ -16,7 +17,7 @@ const next = () => {
   passwordShow.value = true
 }
 const login = async () => {
-  axios.post('http://localhost:8180/api/user/v1/auth', loginInfo).then(res => {
+  axios.post(authUrl, loginInfo).then(res => {
     if (res.data.code !== 2002){
       ElMessage.error(res.data.msg)
       whenLoginError()
@@ -76,13 +77,15 @@ const whenLoginError = () => {
                       @keyup.enter="next"
                       :prefix-icon="User"
                       v-show="!passwordShow"
-                      placeholder="用户名或手机号码"
+                      placeholder="用户名"
                       maxlength="15"
+                      onkeyup="this.value = this.value.replace(/[^a-zA-Z0-9]+$/, '')"
                       show-word-limit autofocus size="large"/>
             <el-input v-model="loginInfo.password"
                       @keyup.enter="login"
                       :prefix-icon="User"
                       v-show="passwordShow"
+                      type="password"
                       placeholder="密码"
                       autofocus size="large"/>
           </el-col>

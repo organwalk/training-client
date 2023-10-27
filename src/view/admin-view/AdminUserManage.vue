@@ -105,7 +105,7 @@ onBeforeMount(() => {
   <tc-container-full-row>
     <el-row :gutter="15">
       <el-col :xs="3" :sm="3" :md="3" :lg="3" :xl="3">
-        <tc-button-add @click="() => {showUserDialog = true; title = '新增用户'}">新增员工</tc-button-add>
+        <tc-button-add @click="() => {showUserDialog = true; title = '新增用户'}">新增用户</tc-button-add>
       </el-col>
 <!--      模糊搜索区域-->
       <el-col :xs="10" :sm="10" :md="10" :lg="10" :xl="10">
@@ -151,7 +151,7 @@ onBeforeMount(() => {
                          v-if="showUserDialog"
                          @close-dialog="closeDialog"
                          @new-user="newUser"
-                         :title="title" :uid="uid"/>
+                         :title="title" :uid="uid" :menu-index="nowTab"/>
 
 </template>
 
