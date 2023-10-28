@@ -12,12 +12,20 @@ const request = (config) => {
         response => {
             if (response.data.code!==2002){
                 if (response.data.code === 4001){
-                    ElMessage.error(response.data.msg)
+                    ElMessage.error({
+                        message:response.data.msg,
+                        grouping:true,
+                        type:'error'
+                    })
                     setTimeout(()=>{
                         window.location.href = '/login'
                     })
                 }else {
-                    ElMessage.error(response.data.msg)
+                    ElMessage.error({
+                        message:response.data.msg,
+                        grouping:true,
+                        type:'error'
+                    })
                 }
             }
             return response.data;
@@ -27,7 +35,11 @@ const request = (config) => {
                 return instance(error.config);
             }
             try {
-                ElMessage.error(error)
+                ElMessage.error({
+                    message:error,
+                    grouping:true,
+                    type:'error'
+                })
             }catch (e){
                 return Promise.reject(error);
             }

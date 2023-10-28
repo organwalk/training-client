@@ -62,22 +62,20 @@ const getNewPageNumber = (val) => {
 
 // 定义模糊搜索功能
 const keyword = ref('')
-const searchByKeyword = (keyword) => {
+const searchByKeyword = async (keyword) => {
   if (keyword.length !== 0 && keyword.replace(/\s/g, '') !== ''){
     loading.value = true
-    setTimeout(async () => {
-      const res = await getUserAccountByKeyword(keyword, nowTab.value, 0)
-      if (res.code === 5005){
-        accountInfoList.value = []
-      }else {
-        total.value = res.total
-        accountInfoList.value = res.data
-      }
-      loading.value = false
-    }, 500)
+    const res = await getUserAccountByKeyword(keyword, nowTab.value, 0)
+    if (res.code === 5005){
+      accountInfoList.value = []
+    }else {
+      total.value = res.total
+      accountInfoList.value = res.data
+    }
+    loading.value = false
   }else {
     loading.value = true
-    getUserAccountListFromApi(0)
+    await getUserAccountListFromApi(0)
   }
 }
 

@@ -16,8 +16,11 @@ const passwordShow = ref(false)
 const next = () => {
   passwordShow.value = true
 }
+const loading = ref(false)
 const login = async () => {
+  loading.value = true
   axios.post(authUrl, loginInfo).then(res => {
+    loading.value = false
     if (res.data.code !== 2002){
       ElMessage.error(res.data.msg)
       whenLoginError()
@@ -51,7 +54,7 @@ const whenLoginError = () => {
   <el-row>
     <el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8" />
     <el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8">
-      <tc-card-center-content>
+      <tc-card-center-content v-loading="loading">
         <el-row>
 <!--          登录banner图-->
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
