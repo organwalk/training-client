@@ -29,6 +29,34 @@ const http = {
         if (params) config.data = params
         return request(config)
     },
+    formDataPost(url, formData){
+        const config = {
+            method: 'post',
+            url: url,
+            data: formData,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'username': sessionStorage.getItem("username"),
+                'access_token': sessionStorage.getItem("access_token"),
+                'auth': sessionStorage.getItem("auth_name")
+            }
+        };
+        return request(config);
+    },
+    formDataPut(url, formData){
+        const config = {
+            method: 'put',
+            url: url,
+            data: formData,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'username': sessionStorage.getItem("username"),
+                'access_token': sessionStorage.getItem("access_token"),
+                'auth': sessionStorage.getItem("auth_name")
+            }
+        };
+        return request(config);
+    },
     put(url,params){
         const config = {
             method:'put',
