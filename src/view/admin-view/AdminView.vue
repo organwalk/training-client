@@ -21,8 +21,22 @@ const breadList = [
     name:'资源管理'
   },
 ]
+const activeList = [
+  {
+    path:'/admin/user',
+    name:'user'
+  },
+  {
+    path:'/admin/dept',
+    name:'dept'
+  },
+  {
+    path:'/admin/resource',
+    name:'resource'
+  },
+]
 const breadName = computed(() => breadList.find(item => item.path === route.path).name)
-
+const defaultActive = computed(() => activeList.find(item => item.path === route.path).name)
 </script>
 
 <template>
@@ -37,7 +51,7 @@ const breadName = computed(() => breadList.find(item => item.path === route.path
 <!--        tab标签栏-->
         <tc-container-full-row>
           <el-menu
-              default-active="user"
+              :default-active=defaultActive
               router
           >
             <el-menu-item index="user">
@@ -58,7 +72,7 @@ const breadName = computed(() => breadList.find(item => item.path === route.path
     </el-col>
     <el-col :xs="20" :sm="20" :md="20" :lg="20" :xl="20">
       <tc-card class="container-card">
-        <el-row>
+        <el-row style="height: 5vh">
 <!--          顶部面包屑-->
           <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4">
             <el-breadcrumb separator="/">

@@ -87,7 +87,7 @@ onBeforeMount(() => {
 
 <template>
 <!--  tab标签栏-->
-  <tc-container-full-row>
+  <tc-container-full-row style="height: 5vh">
     <el-menu
         :default-active="activeTab"
         mode="horizontal"
@@ -97,9 +97,9 @@ onBeforeMount(() => {
       <el-menu-item index="2" @click="getNowTab">讲师列表</el-menu-item>
       <el-menu-item index="3" @click="getNowTab">管理员列表</el-menu-item>
     </el-menu>
-  </tc-container-full-row><br/>
+  </tc-container-full-row><br/><br/>
   <!--列表操作栏-->
-  <div style="height: 80vh;overflow-y: auto">
+  <div style="display: flex;flex-direction: column;height: 80vh;">
   <tc-container-full-row>
     <el-row :gutter="15">
       <el-col :xs="3" :sm="3" :md="3" :lg="3" :xl="3">
@@ -118,6 +118,7 @@ onBeforeMount(() => {
   <tc-container-full-row>
     <el-table :data="accountInfoList" :default-sort="{ prop: 'id', order: 'descending' }"
               style="width: 100%"
+              height="450"
               highlight-current-row stripe v-loading="loading">
       <el-table-column type="index" fixed/>
       <el-table-column prop="id" label="用户UID" sortable/>
@@ -139,7 +140,7 @@ onBeforeMount(() => {
       </el-table-column>
     </el-table><br/>
     <!--  分页器区域-->
-    <tc-container-full-row>
+    <tc-container-full-row style="margin-top: auto;">
       <tc-pagination :total="total" @page-current-change="getNewPageNumber"/>
     </tc-container-full-row>
   </tc-container-full-row>

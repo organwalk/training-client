@@ -6,6 +6,8 @@ import {Search} from "@element-plus/icons-vue";
 import TcButtonAdd from "@/components/button/tc-button-add.vue";
 import {getDeptList} from "@/api/dept-api";
 import {
+  deleteNormalResource,
+  downloadResource,
   getNormalResource,
   getNormalResourceByDeptIdAndTagId,
   getResourceTagByDeptId,
@@ -13,6 +15,7 @@ import {
 } from "@/api/resource-api";
 import TcPagination from "@/components/container/tc-pagination.vue";
 import AdminNormalResourceDialog from "@/view/admin-view/dialog/AdminNormalResourceDialog.vue";
+import {ElMessage} from "element-plus";
 
 // 定义当前页面全局变量
 const activeTab = ref('2')  // 默认tab
@@ -158,17 +161,27 @@ const getNewPageNumber = async (val) => {
       await getNormalResourceList(offset)
     }
   }
-
 }
 
-onBeforeMount(() => {
-  getAllNormalResourceList(0)
-  getDeptListFromApi()
+// 删除指定资源
+const deleteNormalResourceFromApi = async (rid) => {
+  loading.value = true
+  const res = await deleteNormalResource(rid, sessionStorage.getItem("uid"))
+  if (res.code === 2002){
+    dataList.value.splice(dataList.value.findIndex(item => item.id === rid), 1)
+    ElMessage.success(res.msg)
+  }
+  loading.value = false
+}
+
+onBeforeMount(async () => {
+  await getDeptListFromApi()
+  await getAllNormalResourceList(0)
 })
 </script>
 
 <template>
-  <tc-container-full-row>
+  <tc-container-full-row style="height: 5vh">
     <el-menu
         :default-active="activeTab"
         mode="horizontal"
@@ -179,9 +192,9 @@ onBeforeMount(() => {
       <el-menu-item index="3" @click="getNowTab">教材资源</el-menu-item>
     </el-menu>
   </tc-container-full-row>
-  <br/>
+  <br/><br/>
   <!--列表操作栏-->
-  <div style="height: 80vh;overflow-y: auto">
+  <div style="display: flex;flex-direction: column;height: 80vh;">
     <tc-container-full-row>
       <el-row :gutter="15">
         <el-col :xs="3" :sm="3" :md="3" :lg="3" :xl="3">
@@ -208,7 +221,7 @@ onBeforeMount(() => {
     </tc-container-full-row><br/>
     <!--    表格区域-->
     <tc-container-full-row>
-      <el-table :data="dataList" v-loading="loading">
+      <el-table :data="dataList" v-loading="loading" height="450">
         <el-table-column type="index" fixed/>
         <el-table-column prop="id" label="资源RID" sortable/>
         <el-table-column prop="resource_name" label="资源名称"/>
@@ -227,14 +240,14 @@ onBeforeMount(() => {
                          title = '编辑资源详细'}"
             >
               编辑</el-button>
-            <el-button size="small" type="primary">下载</el-button>
-            <el-button size="small" type="danger">删除</el-button>
+            <el-button size="small" type="primary" @click="downloadResource(scope.row.id)">下载</el-button>
+            <el-button size="small" type="danger" @click="deleteNormalResourceFromApi(scope.row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
     </tc-container-full-row><br/>
     <!--  分页器区域-->
-    <tc-container-full-row>
+    <tc-container-full-row style="margin-top: auto;">
       <tc-pagination :total="total" @page-current-change="getNewPageNumber"/>
     </tc-container-full-row>
   </div>

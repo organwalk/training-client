@@ -54,3 +54,13 @@ export function selectNormalResourceByKeyword(keyword,offset,deptId,tagId){
     }
     return http.get(url)
 }
+
+// 下载指定资源文件
+export function downloadResource(rid){
+    return http.downloadGet('/resource/v1/normal/file/' + rid)
+}
+
+// 删除指定资源文件
+export function deleteNormalResource(rid, uid){
+    return http.delete('http://localhost:8180/api/resource/v1/normal/file/' + rid + '/' + uid)
+}
