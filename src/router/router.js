@@ -22,7 +22,7 @@ const routes = [
             {
                 path : 'resource',
                 name : 'adminResourceManage',
-                component: () => import('@/view/admin-view/AdminResourceManage.vue')
+                component: () => import('@/view/admin-view/admin-resource/AdminResourceManage.vue')
             },
         ]
     },

@@ -24,9 +24,12 @@ watchEffect(() => {
 })
 // 控制对话框显隐
 const showNormalResourceDialog = ref()
-const closeNormalResource = () => {
+const closeNormalResource = (des) => {
   showNormalResourceDialog.value = false
-  emit('closeNormalResource', false)
+  emit('closeNormalResource', {
+    state:false,
+    des:des + '-' + Math.random()
+  })
 }
 watchEffect(() => {
   showNormalResourceDialog.value = props.showNormalResourceDialog
@@ -51,9 +54,8 @@ const getDeptListAndTagListFromApi = async () => {
       await getTagListFromApi(normalResourceInfo.dept_id)
     }
   }else {
-    closeNormalResource()
+    closeNormalResource(null)
   }
-
 }
 const tagList = ref()
 const tagState = ref(false)
@@ -82,7 +84,7 @@ const getNormalResourceDetailFromApi = async () => {
     normalResourceInfo.resource_name = res.data.resource_name
     normalResourceInfo.up_id = res.data.up_id
   }else {
-    closeNormalResource()
+    closeNormalResource(null)
   }
   loading.value = false
 }
@@ -105,6 +107,7 @@ const uploadState = (obj, file) => {
   }
 }
 const upload = async () => {
+  loading.value = true
   if (props.rid){
     let file = null
     if (resourceFile.value){
@@ -113,16 +116,16 @@ const upload = async () => {
     const res = await updateNormalResourceDetail(props.rid, normalResourceInfo, file)
     if (res.code === 2002){
       ElMessage.success(res.msg)
-      closeNormalResource()
+      closeNormalResource('edit')
     }
   }else {
     const res = await uploadNormalResource(normalResourceInfo, resourceFile.value.raw)
     if (res.code === 2002){
       ElMessage.success(res.msg)
-      closeNormalResource()
+      closeNormalResource('add')
     }
   }
-
+  loading.value = false
 }
 
 
