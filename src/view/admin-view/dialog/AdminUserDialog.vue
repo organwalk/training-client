@@ -14,6 +14,7 @@ const props = defineProps({
   title:String,
   uid:Number,
   menuIndex:String
+
 })
 
 const loading = ref(true)
