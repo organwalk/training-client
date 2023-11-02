@@ -79,3 +79,8 @@ export function getResourceTagList(deptId){
 export function editTag(tagId, tagName){
     return http.post('/resource/v3/tag/name/' + tagId + '?tag_name=' + tagName)
 }
+
+// 删除指定资源分类标签
+export function deleteTag(tagId){
+    return http.delete('/resource/v3/tag/' + tagId)
+}

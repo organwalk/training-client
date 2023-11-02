@@ -35,6 +35,7 @@ const title = ref('上传普通资源')
 const rId = ref()
 const buttonText = ref('上传普通资源')
 const dialogDes = ref()
+const tagDeptId = ref()
 const openDialog = () => {
   switch (buttonText.value) {
     case '上传普通资源':
@@ -57,6 +58,7 @@ const closeTagResource = async (obj) => {
   deptId.value = null
   showTagResourceDialog.value = obj.state
   dialogDes.value = obj.des
+  tagDeptId.value = obj.deptId || ''
 }
 const editNormal = (obj) => {
   showNormalResourceDialog.value = obj.showEdit
@@ -108,8 +110,9 @@ const deptId = ref()
 const keyword = ref()
 const searchResultOffset = ref()
 const searchByKeyword = async (val) => {
-  keyword.value = val
-  searchResultOffset.value = 0
+  if (val){
+    searchResultOffset.value = 0
+  }
 }
 
 onBeforeMount(async () => {
@@ -173,6 +176,8 @@ onBeforeMount(async () => {
     <admin-tag-resource
         :dept-id="deptId"
         :dialog-des="dialogDes"
+        :keyword="keyword"
+        :tag-dept-id="tagDeptId"
         v-if="nowTab === '1'"/>
   </div>
   <admin-normal-resource-dialog :show-normal-resource-dialog="showNormalResourceDialog"

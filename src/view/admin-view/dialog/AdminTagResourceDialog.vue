@@ -16,7 +16,8 @@ const closeTagResource = (des) => {
   showTagResourceDialog.value = false
   emit('closeTagResource', {
     state: false,
-    des: des + '-' + Math.random()
+    des: des + '-' + Math.random(),
+    deptId:tagObj.dept_id
   })
 }
 watchEffect(() => {
@@ -56,7 +57,6 @@ const submit = async () => {
   <el-dialog v-model="showTagResourceDialog"
              :title="props.title"
              width="30%"
-             style="margin-top: 20px"
              destroy-on-close
              :show-close="false"
              :close-on-click-modal="false"
