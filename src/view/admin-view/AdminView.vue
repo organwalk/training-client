@@ -1,7 +1,7 @@
 <script setup>
 import TcCardCenterContent from "@/components/card/tc-card-center-content.vue";
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
-import {User,Suitcase,Files,Bell,Reading} from '@element-plus/icons-vue'
+import {User,Suitcase,Files,Bell,Reading,Tickets} from '@element-plus/icons-vue'
 import TcCard from "@/components/card/tc-card.vue";
 import {useRoute} from "vue-router";
 import {computed} from "vue";
@@ -20,6 +20,10 @@ const breadList = [
     path:'/admin/resource',
     name:'资源管理'
   },
+  {
+    path: '/admin/plan',
+    name: '培训计划'
+  }
 ]
 const activeList = [
   {
@@ -34,6 +38,10 @@ const activeList = [
     path:'/admin/resource',
     name:'resource'
   },
+  {
+    path: '/admin/plan',
+    name: 'plan'
+  }
 ]
 const breadName = computed(() => breadList.find(item => item.path === route.path).name)
 const defaultActive = computed(() => activeList.find(item => item.path === route.path).name)
@@ -65,6 +73,10 @@ const defaultActive = computed(() => activeList.find(item => item.path === route
             <el-menu-item index="resource">
               <el-icon><Files /></el-icon>
               <template #title>资源管理</template>
+            </el-menu-item>
+            <el-menu-item index="plan">
+              <el-icon><Tickets /></el-icon>
+              <template #title>培训计划</template>
             </el-menu-item>
           </el-menu>
         </tc-container-full-row>

@@ -24,6 +24,11 @@ const routes = [
                 name : 'adminResourceManage',
                 component: () => import('@/view/admin-view/admin-resource/AdminResourceManage.vue')
             },
+            {
+                path: 'plan',
+                name: 'adminPlanManage',
+                component:() => import('@/view/admin-view/AdminPlanManage.vue')
+            }
         ]
     },
 ]

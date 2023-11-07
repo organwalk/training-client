@@ -129,7 +129,6 @@ onBeforeMount(async () => {
     >
       <el-menu-item index="1" @click="getNowTab">资源标签</el-menu-item>
       <el-menu-item index="2" @click="getNowTab">普通资源</el-menu-item>
-      <el-menu-item index="3" @click="getNowTab">教材资源</el-menu-item>
     </el-menu>
   </tc-container-full-row>
   <br/><br/>

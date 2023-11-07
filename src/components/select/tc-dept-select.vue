@@ -9,7 +9,7 @@ const disable = ref(false)
 const loadingData = async () => {
   disable.value = true
   emit('getDeptIdState', true)
-  const res = await getDeptList('1000', 0)
+  const res = await getDeptList('999999', 0)
   if (res.code === 2002) {
     deptList.value = res.data.map(({id, deptName}) => ({value: id, label: deptName}))
     deptId.value = deptList.value[0].value
