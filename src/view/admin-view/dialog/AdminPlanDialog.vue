@@ -1,5 +1,5 @@
 <script setup>
-import {defineProps, ref, defineEmits, watchEffect, reactive, watch, computed} from "vue";
+import {defineProps, ref, defineEmits, watchEffect, reactive} from "vue";
 import TcDateSelect from "@/components/select/tc-date-select.vue";
 import * as dateUtil from "@/utils/dateUtil"
 import {clearObjectValues, objectsIsNull} from "@/utils/dataUtil";
@@ -8,6 +8,7 @@ import TcButtonConform from "@/components/button/tc-button-conform.vue";
 import {createTrainingPlan} from "@/api/plan-api";
 import {ElMessage} from "element-plus";
 import {getISO8601} from "@/utils/dateUtil";
+import {withLoading} from "@/utils/functionUtil";
 
 // 定义全局变量
 const props = defineProps({
@@ -19,15 +20,18 @@ const showPlanDialog = ref()
 watchEffect(() => {
   showPlanDialog.value = props.showPlanDialog
 })
-const closeDialog = () => {
+const closeDialog = (des) => {
   showPlanDialog.value = false
-  emit('closeDialog', false)
+  emit('closeDialog', {
+    state:false,
+    des:des + '-' + Math.random()
+  })
   // 初始化数据
   clearObjectValues(planObj)
   startSelectDate.value = dateUtil.getNowDate()
   endSelectDate.value = new Date(dateUtil.getNowDate().setDate(dateUtil.getNowDate().getDate() + 1))
 }
-const loading = ref(true)
+const loading = ref(false)
 
 // 定义创建培训计划所需对象
 const planObj = reactive({
@@ -61,22 +65,13 @@ watchEffect(() => {
 })
 
 // 创建培训计划
-const addPlan = async () => {
-  loading.value = true
+const addPlan = withLoading(async () => {
   const res = await createTrainingPlan(planObj)
   if (res.code === 2002){
     ElMessage.success(res.msg)
-    closeDialog()
+    closeDialog('add')
   }
-  loading.value = false
-}
-
-const deptIdState = computed(() => planObj.dept_id)
-watch(deptIdState, (newVal, oldVal) => {
-  if (newVal !== oldVal){
-    loading.value = false
-  }
-})
+}, loading)
 
 </script>
 
@@ -93,13 +88,13 @@ watch(deptIdState, (newVal, oldVal) => {
     <el-form :model="planObj" label-width="100px" v-loading="loading">
       <el-form-item label="培训计划标题">
         <el-input v-model="planObj.training_title"
-                  placeholder="请输入培训计划标题" />
+                  placeholder="请输入培训计划标题" maxlength="15" show-word-limit/>
       </el-form-item>
       <el-form-item label="培训计划目的">
         <el-input v-model="planObj.training_purpose"
                   :rows="4"
                   type="textarea"
-                  placeholder="请输入培训计划目的" />
+                  placeholder="请输入培训计划目的" maxlength="100" show-word-limit/>
       </el-form-item>
       <el-form-item label="选择开始时间">
         <tc-date-select :valid-type="'start'"
@@ -113,12 +108,13 @@ watch(deptIdState, (newVal, oldVal) => {
                         @get-select-date="getEndDate"/>
       </el-form-item>
       <el-form-item label="选择培训部门">
-        <tc-dept-select @get-dept-id="(deptId) => planObj.dept_id = deptId"/>
+        <tc-dept-select :default-value="true"
+                        @get-dept-id="(deptId) => planObj.dept_id = deptId"/>
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="closeDialog" :disabled="loading">取消</el-button>
+        <el-button @click="closeDialog('cancel')" :disabled="loading">取消</el-button>
         <tc-button-conform @click="addPlan" :disabled="objectsIsNull(planObj)" v-btn>
           确认</tc-button-conform>
       </span>

@@ -10,7 +10,7 @@ export function getDeptList(pageSize, offset){
 
 //获取指定部门信息
 export function getDeptInfo(dept_id){
-    return http.get('/dept/v1/department/' + dept_id)
+    return http.get('/dept/v1/department/info/' + dept_id)
 }
 
 //删除部门

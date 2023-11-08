@@ -5,15 +5,18 @@ import * as dateUtil from "@/utils/dateUtil"
 const props = defineProps({
   validType:String,
   selectDate:Date,
-  ruleDate:Date
+  ruleDate:Date,
+  disable:Boolean
 })
 const emit = defineEmits(["getSelectDate"])
 const selectDate = ref()
 const validType = ref()
 const ruleDate = computed(()=> props.ruleDate)
+const disable = ref()
 
 watchEffect(() => {
   validType.value = props.validType
+  disable.value = props.disable
 })
 watchEffect(() => {
   emit('getSelectDate', selectDate.value)
@@ -32,6 +35,8 @@ onBeforeMount(() => {
 const disabledDate = (checkDate) => {
   return dateUtil.validDateDisabled(validType.value, ruleDate.value, checkDate)
 }
+
+
 </script>
 
 <template>
@@ -41,6 +46,7 @@ const disabledDate = (checkDate) => {
       placeholder="选择日期"
       :clearable="false"
       :disabled-date="disabledDate"
+      :disabled="disable"
   />
 </template>
 
