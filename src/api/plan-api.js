@@ -24,3 +24,28 @@ export function getAllPlanByKeyword(keyword, offset){
 export function getPlanListByDeptId(deptId, offset){
     return http.get('/training/v3/plan/dept/' + deptId + '/9/' + offset)
 }
+
+// 获取指定培训计划的讲师列表
+export function getTeacherListByPlanId(planId){
+    return http.get('/training/v1/plan/teacher/' + planId + '/999999/0')
+}
+
+// 获取指定培训计划的员工列表
+export function getStudentListByPlanId(planId){
+    return http.get('/training/v1/plan/student/'  + planId + '/999999/0')
+}
+
+// 编辑指定培训计划
+export function updatePlanInfoByPlanId(planId, obj){
+    return http.put('/training/v3/plan/' + planId, obj)
+}
+
+// 修改培训计划状态
+export function updatePlanStateByPlanId(planId, state){
+    return http.put('/training/v3/plan/state/' + planId + '/' + state)
+}
+
+// 删除培训计划下的指定讲师
+export function deleteTeacherById(id){
+    return http.delete('/training/v3/plan/teacher/' + id)
+}

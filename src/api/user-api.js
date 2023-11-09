@@ -34,3 +34,7 @@ export function deleteAccountByUid(uid){
 export function getTeacherList(){
     return http.get('/user/v3/account/2/999999/0')
 }
+// 获取学生列表
+export function getStudentList(){
+    return http.get('/user/v3/account/1/999999/0')
+}

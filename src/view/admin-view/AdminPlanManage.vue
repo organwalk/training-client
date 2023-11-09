@@ -19,9 +19,9 @@ const title = ref()
 const keyword = ref()
 const loading = ref(false)
 const planState = {
-  "timeout":"超时",
-  "end":"已结束",
-  "over":"已完成",
+  "timeout":"逾期超时",
+  "end":"已经结束",
+  "over":"已经完成",
   "ongoing":"正在进行"
 }
 const total = ref()
@@ -136,18 +136,22 @@ watch(nowDeptId, async (newVal, oldVal) => {
 })
 
 const basicInfo = reactive({
+  training_plan_id:'',
   training_title:'',
   training_purpose:'',
   training_start_time:'',
-  training_end_time:''
+  training_end_time:'',
+  training_state:''
 })
 const edit = (item) => {
   showPlanEditDialog.value = true
   title.value = '编辑培训计划'
+  basicInfo.training_plan_id = item.id
   basicInfo.training_title = item.training_title
   basicInfo.training_purpose = item.training_purpose
   basicInfo.training_start_time = item.training_start_time
   basicInfo.training_end_time = item.training_end_time
+  basicInfo.training_state = Object.keys(planState).find(key => planState[key] === item.training_state)
 }
 </script>
 

@@ -15,5 +15,9 @@ export function validDateDisabled(validType, ruleDate, checkDate){
 // 获取yyyy-mm-dd的时间
 export function getISO8601(date){
     return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
+}
 
+// 检查是否逾期超时
+export function validTimeout(validDate){
+    return new Date(validDate) > getNowDate()
 }
