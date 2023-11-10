@@ -1,3 +1,5 @@
+
+
 const routes = [
     {
         path : '/login',
@@ -25,7 +27,10 @@ const routes = [
                 component: () => import('@/view/admin-view/admin-resource/AdminResourceManage.vue')
             },
         ]
-    },
+    }
 ]
 
-export default routes
+
+export default routes;
+
+
