@@ -12,22 +12,25 @@ import {deleteTrainingPlanByPlanId, getAllPlanByKeyword, getAllPlanList, getPlan
 import {ElMessage} from "element-plus";
 import TcDeptSelect from "@/components/select/tc-dept-select.vue";
 import AdminPlanEditDialog from "@/view/admin-view/dialog/AdminPlanEditDialog.vue";
+import {getPlanProgress} from "@/api/progress-api";
 
+// 定义全局变量
 const showPlanDialog = ref(false)
 const showPlanEditDialog = ref(false)
 const title = ref()
 const keyword = ref()
 const loading = ref(false)
+const total = ref()
+const nowDeptId = ref()
+const showEmpty = ref(false)
 const planState = {
   "timeout":"逾期超时",
   "end":"已经结束",
   "over":"已经完成",
   "ongoing":"正在进行"
 }
-const total = ref()
-const nowDeptId = ref()
-const showEmpty = ref(false)
 
+// 关闭对话框
 const closeDialog = async (obj) => {
   showPlanDialog.value = obj.state
   if (obj.des.split("-")[0] === 'add'){
@@ -40,6 +43,8 @@ const closeEditDialog = async (obj) => {
     await loadingDataList(0)
   }
 }
+
+// 当搜索框的值发生变动时，触发搜索事件
 const searchByKeyword = async (val) => {
   if (val){
     keyword.value = val
@@ -52,14 +57,24 @@ const searchByKeyword = async (val) => {
 
 // 数据列表初始化
 const dataList = ref()
+// 将部门ID替换为部门名，将抽象状态换为具体状态,将进度列表渲染其中
 const dataListProcess = () => {
-  // 将部门ID替换为部门名，将抽象状态换为具体状态
   return dataList.value.map(async (item) => {
     const deptResult = await getDeptInfo(item.dept_id)
     item.dept_id = deptResult.data.deptName
     item.training_state = planState[item.training_state]
+    const progressResult = await getPlanProgress()
+    progressResult.data.forEach((p) => {
+      if(item.id === p.plan_id && typeof p.persent !== "undefined"){
+        console.log()
+        item.progress = Math.round(p.persent * 100)
+      } else {
+        item.progress = 0
+      }
+    })
   })
 }
+
 const loadingDataList = withLoading(async (offset) => {
   const res = await getAllPlanList(offset)
   if (res.code === 2002){
@@ -67,6 +82,7 @@ const loadingDataList = withLoading(async (offset) => {
     dataList.value = res.data
     total.value = res.total
     await Promise.all(dataListProcess())
+    console.log(dataList.value)
   }else {
     showEmpty.value = true
   }
@@ -207,12 +223,19 @@ const edit = (item) => {
               <span style="font-weight: lighter;font-size: 0.9rem;">{{ item.training_purpose }}</span>
             </div>
           </tc-container-full-row><br/><br/>
-          <div style="position:absolute;bottom: 0;margin-bottom: 10px">
-            <el-row :gutter="15">
+          <div style="position:absolute;bottom: 0;margin-bottom: 10px;width: 100%">
+            <el-row style="margin-bottom: 10px">
+              <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+                <el-progress
+                    :percentage="item.progress"
+                />
+              </el-col>
+            </el-row>
+            <el-row >
               <el-col :xs="5" :sm="5" :md="5" :lg="5" :xl="5" >
                 <el-tag type="success" style="font-size: 0.8rem;" round>{{ item.training_state }}</el-tag>
               </el-col>
-              <el-col :xs="19" :sm="19" :md="19" :lg="19" :xl="19" align="right">
+              <el-col :xs="19" :sm="19" :md="19" :lg="16" :xl="19" align="right">
                 <span style="font-size: 0.8rem;">{{ item.training_start_time }} ~ {{ item.training_end_time }}</span>
               </el-col>
             </el-row>

@@ -46,6 +46,20 @@ export function updatePlanStateByPlanId(planId, state){
 }
 
 // 删除培训计划下的指定讲师
-export function deleteTeacherById(id){
-    return http.delete('/training/v3/plan/teacher/' + id)
+export function deleteTeacherById(planId, teacherId){
+    return http.delete('/training/v3/plan/teacher/' + planId + '/' + teacherId)
+}
+
+// 删除培训计划下的指定学员
+export function deleteStudentById(planId, studentId){
+    return http.delete('/training/v3/plan/student/' + planId + '/' + studentId)
+}
+
+// 添加教师至指定培训计划下
+export function addTeacherToPlan(planId, teacherList){
+    return http.post('/training/v3/plan/teacher/' + planId + '?teacherIdList=' + teacherList)
+}
+// 添加学员至指定培训计划下
+export function addStudentToPlan(planId, studentList){
+    return http.post('/training/v3/plan/student/' + planId + '?studentIdList=' + studentList)
 }

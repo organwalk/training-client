@@ -10,7 +10,7 @@ const teacherList = ref()
 const props = defineProps({
   planId:Number
 })
-const emit = defineEmits(['getTeacherIdList'])
+const emit = defineEmits(['getTeacherIdList', 'getTeacherIdOriginList', 'getTeacherTableList'])
 
 const loadingDataList = async () => {
   disable.value = true
@@ -18,7 +18,11 @@ const loadingDataList = async () => {
   if (res.code === 2002){
     teacherList.value = res.data.map(({id, realName}) => ({value: id, label: realName}))
     const teacherIdListRes = await getTeacherListByPlanId(props.planId)
-    teacherId.value = teacherIdListRes.data.map(item => item.training_teacher_id);
+    if (teacherIdListRes.code === 2002){
+      teacherId.value = teacherIdListRes.data.map(item => item.training_teacher_id)
+    }
+    emit('getTeacherIdOriginList', teacherId.value)
+    emit('getTeacherTableList', teacherList.value.filter(item => teacherId.value.includes(item.value)))
   }
   disable.value = false
 }
@@ -29,13 +33,14 @@ onBeforeMount(async () => {
 
 const change = (teacherIdList) => {
   emit('getTeacherIdList', teacherIdList)
+  emit('getTeacherTableList', teacherList.value.filter(item => teacherIdList.includes(item.value)))
 }
 </script>
 
 <template>
   <el-row>
     <el-select v-model="teacherId"
-               placeholder="选择讲师"
+               placeholder="在此处检索及选择讲师"
                @change="change"
                :disabled="disable"
                style="width: 100%;"
