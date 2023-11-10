@@ -1,17 +1,22 @@
 <script setup>
-import {defineProps, defineEmits, ref, watchEffect, reactive, onBeforeMount,} from 'vue'
-import {creatDeptAccount} from "@/api/dept-api";
-import {deleteDeptByDept_id} from "@/api/dept-api";
+import {defineProps, defineEmits, ref, watchEffect, reactive, onBeforeMount, } from 'vue'
+import {deleteDeptByDept_id,
+  editDeptInfo,
+  getDeptInfo,
+  addDeptMember,
+  creatDeptAccount,
+  deleteDeptMember} from "@/api/dept-api";
 import {getUserAccountList} from "@/api/user-api";
 import {ElMessage} from "element-plus";
-import TcButtonConform from "@/components/button/tc-button-conform.vue";
+
 
 
 //定义从父类那接收的变量
 const props = defineProps({
   showDeptDialog: Boolean,
   title: String,
-  dept_id: Number
+  dept_id: Number,
+  uid: Number
 })
 
 
@@ -30,16 +35,19 @@ const closeDialog = () => {
 
 //定义部门对象
 const deptInfo = reactive({
-  uid: '',
+  uid:'',
   id: '',
   deptName: '',
   headId: '',
   dept_id: '',
+  deptId:'',
   authId: '',
   auth_id: '',
   realName:'',
-  real_name:''
+  real_name:'',
+  dept_name:''
 })
+
 
 
 
@@ -58,6 +66,34 @@ const addDept = async () => {
   }
 }
 
+
+//获取指定部门列表信息
+const getDeptInfoFromApi = async () =>{
+  const res = await getDeptInfo(props.dept_id)
+  if (res.code === 5005){
+    closeDialog()
+  }else{
+    deptInfo.dept_name = res.data.deptName
+    deptInfo.head_id = res.data.headId
+  }
+}
+
+
+//编辑部门,只提取部门列表的负责人id和部门名称
+const editDept = async () => {
+  let obj = {
+    'dept_name':deptInfo.dept_name,
+    'head_id':deptInfo.head_id
+  }
+  const res = await editDeptInfo(props.dept_id,obj)
+  if(res.code === 2002) {
+    ElMessage.success(res.msg)
+    emit('newDept', true)
+    closeDialog()
+  }
+}
+
+
 //删除部门
 const deleteDept = async () => {
   const res = await deleteDeptByDept_id(props.dept_id)
@@ -68,6 +104,36 @@ const deleteDept = async () => {
   }
 }
 
+
+// 添加部门成员
+const addDeptPeople = async () => {
+  let obj = {
+    'dept_id': props.dept_id,
+    'uid':deptInfo.uid
+  }
+  const res = await addDeptMember(obj)
+  if (res.code === 2002) {
+    ElMessage.success(res.msg)
+    emit('newDept', true)
+    closeDialog()
+  }
+}
+
+
+
+//删除部门成员
+const deleteDeptPeople = async () => {
+  const res = await deleteDeptMember( props.uid,props.dept_id)
+  if (res.code === 2002) {
+    ElMessage.success(res.msg)
+    emit('newDept', true)
+    closeDialog()
+  }
+}
+
+
+
+//获取用户列表
 const userAccountList = ref([])
 const getUserAccountListFromApi = async () => {
   const res = await getUserAccountList('1', 0)
@@ -77,8 +143,12 @@ const getUserAccountListFromApi = async () => {
 }
 
 
+// 解释器执行之前
 onBeforeMount(() => {
   getUserAccountListFromApi()
+  if (props.title === '编辑部门') {
+    getDeptInfoFromApi()
+  }
 })
 
 
@@ -89,18 +159,18 @@ onBeforeMount(() => {
              :before-close="closeDialog"
              width="30%"
              :title="props.title"
+             destroy-on-close
   >
-    <el-form :model="deptInfo" label-width="70px" v-if="props.title !== '删除部门'">
+    <el-form :model="deptInfo" label-width="70px" >
+<!--      新增部门-->
       <el-form-item label="部门名称" v-if="props.title === '新增部门'">
         <el-input placeholder="请输入部门名称"
-                  v-model="deptInfo.deptName"
-        />
+                  v-model="deptInfo.deptName"/>
       </el-form-item>
-      <el-form-item label="负责人ID" v-if="props.title === '新增部门'">
+      <el-form-item label="负责人" v-if="props.title === '新增部门'">
         <el-select v-model="deptInfo.headId"
                    placeholder="需要一位负责人"
-                   filterable
-        >
+                   filterable>
           <el-option v-for="item in userAccountList"
                      :key="item.value"
                      :label="item.label"
@@ -108,29 +178,74 @@ onBeforeMount(() => {
         </el-select>
       </el-form-item>
 
-      <el-form-item label="负责人ID" v-if="props.title === '查看部门'">
+<!--        编辑部门-->
+      <el-form-item v-if="props.title === '编辑部门'" label="部门名称">
+        <el-input v-model="deptInfo.dept_name"
+                  placeholder="请输入部门名称"
+                  minlength="2">
 
+        </el-input>
+      </el-form-item>
+    <el-form-item v-if="props.title === '编辑部门'" label="负责人">
+        <el-select v-model="deptInfo.head_id"
+                   placeholder="需要一位负责人"
+                   filterable
+                   @change="getUserAccountListFromApi">
+          <el-option v-for="item in userAccountList"
+                     :key="item.value"
+                     :label="item.label"
+                     :value="item.value"/>
+        </el-select>
+      </el-form-item>
+
+
+<!--      新增成员-->
+      <el-form-item v-if="props.title === '新增成员'" label="部门成员">
+        <el-select v-model="deptInfo.uid"
+                   placeholder="需要-部门成员"
+                   filterable>
+          <el-option v-for="item in userAccountList"
+                     :key="item.value"
+                     :label="item.label"
+                     :value="item.value"/>
+        </el-select>
       </el-form-item>
 
     </el-form>
     <span v-if="props.title ==='删除部门'">是否确认删除此部门？该操作不可撤回</span>
 
+    <span v-if="props.title ==='删除成员'">是否确认删除此成员？该操作不可撤回</span>
+
     <template #footer>
   <span class="dialog-footer">
     <el-button @click="closeDialog">取消</el-button>
-    <tc-button-conform @click="addDept" v-if="props.title ==='新增部门'">
+
+    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="addDept" v-if="props.title ==='新增部门'">
       添加
-    </tc-button-conform>
-    <tc-button-conform @click="deleteDept" v-if="props.title ==='删除部门'">
+    </el-button>
+
+    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="editDept" v-if="props.title === '编辑部门'">
+      确定编辑
+    </el-button>
+
+    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="deleteDept" v-if="props.title ==='删除部门'">
       确定删除
-    </tc-button-conform>
+    </el-button>
+
+    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="addDeptPeople()" v-if="props.title ==='新增成员'">
+      添加
+    </el-button>
+
+    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="deleteDeptPeople()" v-if="props.title ==='删除成员'">
+      确定删除
+    </el-button>
+
   </span>
     </template>
 
   </el-dialog>
-
-
 </template>
+
 
 
 <style scoped>

@@ -30,6 +30,10 @@ export function getUserAccountByKeyword(keyword, type, offset){
 export function deleteAccountByUid(uid){
     return http.delete('/user/v3/account/' + uid)
 }
+//获取指定用户信息
+export function getUserInfoByUid(uid){
+    return http.get('/user/v1/info/' + uid)
+}
 // 获取教师列表
 export function getTeacherList(){
     return http.get('/user/v3/account/2/999999/0')
