@@ -24,15 +24,29 @@ const props = defineProps({
 const emit = defineEmits(['closeEditDialog'])
 const showPlanEditDialog = ref()
 const loading = ref(false)
+const timer = ref()
 watchEffect(() => {
   showPlanEditDialog.value = props.showPlanEditDialog
+  if (showPlanEditDialog.value){
+    timer.value = new Date().getTime();
+  }
 })
+
+
+// 清除和重载对话框数据
+const clearDialogData = () => {
+  nowTab.value = '1'
+  teacherTableList.value = []
+  studentTableList.value = []
+  loadingFatherData()
+}
 const closeDialog = (des) => {
   showPlanEditDialog.value = false
   emit('closeEditDialog', {
     state: false,
     des: des + '-' + Math.random()
   })
+  clearDialogData()
 }
 
 // 获取当前所选tab
@@ -57,17 +71,21 @@ const getEndDate = (val) => {
     basicInfo.training_end_time = getISO8601(new Date(val))
   }
 }
+
+const loadingFatherData = () => {
+  basicInfo.training_title = fatherBasicInfo.value.training_title
+  basicInfo.training_purpose = fatherBasicInfo.value.training_purpose
+  basicInfo.training_end_time = fatherBasicInfo.value.training_end_time
+  planId.value = fatherBasicInfo.value.training_plan_id
+  if (fatherBasicInfo.value.training_state !== '' && checkState.value.length === 0) {
+    checkState.value.push(fatherBasicInfo.value.training_state)
+  }
+  endSelectDate.value = fatherBasicInfo.value.training_end_time
+  startSelectDate.value = fatherBasicInfo.value.training_start_time
+}
 watchEffect(() => {
   if (fatherBasicInfo.value) {
-    basicInfo.training_title = fatherBasicInfo.value.training_title
-    basicInfo.training_purpose = fatherBasicInfo.value.training_purpose
-    basicInfo.training_end_time = fatherBasicInfo.value.training_end_time
-    planId.value = fatherBasicInfo.value.training_plan_id
-    if (fatherBasicInfo.value.training_state !== '' && checkState.value.length === 0) {
-      checkState.value.push(fatherBasicInfo.value.training_state)
-    }
-    endSelectDate.value = fatherBasicInfo.value.training_end_time
-    startSelectDate.value = fatherBasicInfo.value.training_start_time
+    loadingFatherData()
   }
 })
 const teacherIdList = ref()
@@ -196,12 +214,15 @@ const validEdit = (basic, stateList, teacherList, studentList) => {
   return !(basic || stateList || teacherList || studentList);
 }
 
+const getTeacherProgress = (val) => {
+  return typeof val === "undefined" ? 0 : Math.round(val * 100)
+}
 </script>
 
 <template>
   <el-dialog v-model="showPlanEditDialog"
-             :title="props.title"
              v-if="showPlanEditDialog"
+             :title="props.title"
              top="5vh"
              fullscreen
              :close-on-click-modal="false"
@@ -209,7 +230,7 @@ const validEdit = (basic, stateList, teacherList, studentList) => {
              :before-close="closeDialog"
              :show-close="!loading"
   >
-    <el-card shadow="never">
+    <el-card shadow="never" :key="timer">
       <!--    tab栏-->
       <el-menu
           default-active="1"
@@ -270,9 +291,32 @@ const validEdit = (basic, stateList, teacherList, studentList) => {
                       height="350"
                       border
                       highlight-current-row stripe v-loading="loading">
+              <el-table-column type="expand">
+                <template #default="props">
+                  <el-card shadow="never">
+                    <h3>{{ props.row.label }}老师所授课程情况如下：</h3>
+                    <el-table :data="props.row.progress.lesson_progress"
+                              height="350"
+                              border highlight-current-row>
+                      <el-table-column label="课程ID" prop="id" />
+                      <el-table-column label="课程名称" prop="lesson_name" />
+                      <el-table-column label="课程进度">
+                        <template #default="scope">
+                          <el-progress :percentage="getTeacherProgress(scope.row.total_progres)"/>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                  </el-card>
+                </template>
+              </el-table-column>
               <el-table-column type="index" fixed/>
               <el-table-column prop="value" label="讲师ID" sortable/>
               <el-table-column prop="label" label="讲师姓名"/>
+              <el-table-column label="讲师总体授课进度">
+                <template #default="scope">
+                  <el-progress :percentage="getTeacherProgress(scope.row.all_total_progress)"/>
+                </template>
+              </el-table-column>
             </el-table>
           </tc-container-full-row>
         </div>

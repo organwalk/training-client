@@ -4,6 +4,7 @@ import {Loading} from "@element-plus/icons-vue";
 import {onBeforeMount, ref, defineEmits, defineProps} from "vue";
 import {getTeacherList} from "@/api/user-api";
 import {getTeacherListByPlanId} from "@/api/plan-api";
+import {getTeacherAndLessonProgress} from "@/api/progress-api";
 const teacherId = ref()
 const disable = ref(false)
 const teacherList = ref()
@@ -20,9 +21,15 @@ const loadingDataList = async () => {
     const teacherIdListRes = await getTeacherListByPlanId(props.planId)
     if (teacherIdListRes.code === 2002){
       teacherId.value = teacherIdListRes.data.map(item => item.training_teacher_id)
+      const progressPromise = teacherList.value.filter(item => teacherId.value.includes(item.value))
+          .map(async item => {
+            const teaAndLesProgress = await getTeacherAndLessonProgress(item.value);
+            item.progress = teaAndLesProgress.data
+            return item
+          });
+      emit('getTeacherTableList', await Promise.all(progressPromise))
     }
     emit('getTeacherIdOriginList', teacherId.value)
-    emit('getTeacherTableList', teacherList.value.filter(item => teacherId.value.includes(item.value)))
   }
   disable.value = false
 }
@@ -31,9 +38,15 @@ onBeforeMount(async () => {
   await loadingDataList()
 })
 
-const change = (teacherIdList) => {
+const change = async (teacherIdList) => {
   emit('getTeacherIdList', teacherIdList)
-  emit('getTeacherTableList', teacherList.value.filter(item => teacherIdList.includes(item.value)))
+  const progressPromise = teacherList.value.filter(item => teacherIdList.includes(item.value))
+      .map(async item => {
+        const teaAndLesProgress = await getTeacherAndLessonProgress(item.value);
+        item.progress = teaAndLesProgress.data;
+        return item
+      });
+  emit('getTeacherTableList', await Promise.all(progressPromise))
 }
 </script>
 

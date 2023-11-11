@@ -141,6 +141,7 @@ onBeforeMount(async () => {
         </el-col>
         <tc-dept-select
             v-if="nowTab === '1'"
+            :default-value="true"
             @get-dept-id-state="(state) => loading = state"
             @get-dept-id="(id) => deptId = id"/>
         <!--        部门/资源分类标签区域-->

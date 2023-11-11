@@ -15,14 +15,17 @@ export function getNormalResourceByDeptIdAndTagId(deptId, tagId, offset){
     return http.get('/resource/v1/file/normal/' + deptId + '/' + tagId + '/10/' + offset)
 }
 
+export const fileSliceSize = 2 * 1024 * 1024; // 每个文件切片大小定为5MB
 // 上传资源文件
-export function uploadNormalResource(obj, file){
+export function uploadNormalResource(infoObj, fileObj){
     const formData = new FormData()
-    formData.append('dept_id', obj.dept_id)
-    formData.append('tag_id', obj.tag_id)
-    formData.append('resource_name', obj.resource_name)
-    formData.append('resource_file', file)
-    formData.append('up_id', obj.up_id)
+    formData.append('dept_id', infoObj.dept_id)
+    formData.append('tag_id', infoObj.tag_id)
+    formData.append('resource_name', infoObj.resource_name)
+    formData.append('up_id', infoObj.up_id)
+    for (let key in fileObj) {
+        formData.append(key, fileObj[key]);
+    }
     return http.formDataPost('/resource/v1/file/normal', formData)
 }
 

@@ -41,6 +41,7 @@ const request = (config) => {
             return response.data;
         },
         error => {
+            console.log(error)
             if (error.code){
                 ElMessage.error({
                     message:"内部服务错误",

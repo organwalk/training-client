@@ -5,6 +5,7 @@ import {User,Suitcase,Files,Bell,Reading,Tickets} from '@element-plus/icons-vue'
 import TcCard from "@/components/card/tc-card.vue";
 import {useRoute} from "vue-router";
 import {computed} from "vue";
+import websiteIcon from "@/assets/website_icon.png"
 
 const route = useRoute()
 const breadList = [
@@ -54,7 +55,10 @@ const defaultActive = computed(() => activeList.find(item => item.path === route
       <!--      左侧菜单栏  -->
       <tc-card-center-content class="menu-card">
         <tc-container-full-row >
-          <span class="menu-logo">TrainingClient</span>
+          <div style="display: flex;align-items: center;">
+            <img :src="websiteIcon" alt="404" style="width: 40px;height: 40px">
+            <span class="menu-logo" style="margin-left: 5px">TrainingClient</span>
+          </div>
         </tc-container-full-row><br/>
 <!--        tab标签栏-->
         <tc-container-full-row>

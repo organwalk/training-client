@@ -66,7 +66,6 @@ const dataListProcess = () => {
     const progressResult = await getPlanProgress()
     progressResult.data.forEach((p) => {
       if(item.id === p.plan_id && typeof p.persent !== "undefined"){
-        console.log()
         item.progress = Math.round(p.persent * 100)
       } else {
         item.progress = 0
@@ -82,7 +81,6 @@ const loadingDataList = withLoading(async (offset) => {
     dataList.value = res.data
     total.value = res.total
     await Promise.all(dataListProcess())
-    console.log(dataList.value)
   }else {
     showEmpty.value = true
   }
@@ -226,9 +224,7 @@ const edit = (item) => {
           <div style="position:absolute;bottom: 0;margin-bottom: 10px;width: 100%">
             <el-row style="margin-bottom: 10px">
               <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-                <el-progress
-                    :percentage="item.progress"
-                />
+                <el-progress :percentage="item.progress"/>
               </el-col>
             </el-row>
             <el-row >

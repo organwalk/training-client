@@ -3,8 +3,7 @@ import {onBeforeMount, ref} from "vue";
 import AdminDeptDialog from "@/view/admin-view/dialog/AdminDeptDialog.vue";
 import TcPagination from "@/components/container/tc-pagination.vue";
 import {getDeptList,
-        getDeptMember,
-        getDeptAccountByKeyword} from "@/api/dept-api";
+        getDeptMember} from "@/api/dept-api";
 import {getUserAccountList,
         getUserInfoByUid} from "@/api/user-api";
 import {Plus, Search} from "@element-plus/icons-vue";
@@ -116,9 +115,9 @@ const getDeptMemberList = async(m_deptId) => {
 //模糊查询部门列表
 const keyword = ref('')
 
-const deptByKeyword = async (keyword) => {
-
-}
+// const deptByKeyword = async (keyword) => {
+//
+// }
 
 
 

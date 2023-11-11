@@ -2,6 +2,7 @@
 import {ref, defineProps, defineEmits, watchEffect, reactive, onBeforeMount} from "vue";
 import {getDeptList} from "@/api/dept-api";
 import {
+  fileSliceSize,
   getNormalResourceDetail,
   getResourceTagByDeptId,
   updateNormalResourceDetail,
@@ -10,6 +11,7 @@ import {
 import { UploadFilled } from '@element-plus/icons-vue'
 import TcButtonConform from "@/components/button/tc-button-conform.vue";
 import {ElMessage} from "element-plus";
+import {calculateHash} from "@/utils/dataUtil";
 
 const props = defineProps({
   showNormalResourceDialog:Boolean,
@@ -106,8 +108,19 @@ const uploadState = (obj, file) => {
     return !props.rid;
   }
 }
+
+const getFileTotalSlice = () => { return Math.ceil(resourceFile.value.size / fileSliceSize) }
+const uploadProgress = ref(0)
+const uploadColors = [
+  { color: '#f56c6c', percentage: 20 },
+  { color: '#e6a23c', percentage: 40 },
+  { color: '#1989fa', percentage: 60 },
+  { color: '#6f7ad3', percentage: 80 },
+  { color: '#5cb87a', percentage: 100 },
+]
+const uploadFileState = ref(false)
 const upload = async () => {
-  loading.value = true
+  uploadFileState.value = true
   if (props.rid){
     let file = null
     if (resourceFile.value){
@@ -119,13 +132,44 @@ const upload = async () => {
       closeNormalResource('edit')
     }
   }else {
-    const res = await uploadNormalResource(normalResourceInfo, resourceFile.value.raw)
-    if (res.code === 2002){
-      ElMessage.success(res.msg)
-      closeNormalResource('add')
+    for (let i = 1; i <= getFileTotalSlice(); i++) {
+      let chunk;
+      if (i === getFileTotalSlice()) {
+        // 最后一片
+        chunk = resourceFile.value.raw.slice((i - 1) * fileSliceSize, resourceFile.value.size);//切割文件
+      } else {
+        chunk = resourceFile.value.raw.slice((i - 1) * fileSliceSize, i * fileSliceSize);
+      }
+      const hashValue = await calculateHash(resourceFile.value.raw)
+      let fileObj = {
+        resource_file: chunk,
+        file_hash: hashValue,
+        file_size: resourceFile.value.size,
+        file_chunks_sum: getFileTotalSlice(),
+        file_now_chunk: i,
+        file_origin_name: resourceFile.value.raw.name
+      }
+      if (i === 1){
+        await uploadNormalFile(i, fileObj)
+      }else {
+        setTimeout(async () => {
+          await uploadNormalFile(i, fileObj)
+        }, 3000)
+      }
     }
   }
   loading.value = false
+}
+
+const uploadNormalFile = async (i, fileObj) => {
+  const res = await uploadNormalResource(normalResourceInfo, fileObj)
+  if (res.msg === "当前文件片段上传成功"){
+    uploadProgress.value = Math.floor((i / getFileTotalSlice()) * 100);
+  }else if (res.msg === "资源文件上传成功"){
+    ElMessage.success(res.msg)
+    uploadFileState.value = false
+    closeNormalResource('add')
+  }
 }
 
 
@@ -152,12 +196,14 @@ onBeforeMount(() => {
   <el-form :model="normalResourceInfo" label-width="100px" v-loading="loading">
     <el-form-item label="填入资源名称">
       <el-input v-model="normalResourceInfo.resource_name"
+                :disabled="uploadFileState"
                 placeholder="请输入上传资源名称，如：市场营销入门级手册" />
     </el-form-item>
     <el-form-item label="选择上传部门">
       <el-select v-model="normalResourceInfo.dept_id"
                  placeholder="需要选择一个有效部门"
                  @change="getTagListFromApi"
+                 :disabled="uploadFileState"
                  filterable>
         <el-option
             v-for="item in deptList"
@@ -170,7 +216,7 @@ onBeforeMount(() => {
     <el-form-item label="选择分类标签">
       <el-select v-model="normalResourceInfo.tag_id"
                  placeholder="需要选择一个资源分类标签"
-                 :disabled="tagState"
+                 :disabled="tagState || uploadFileState"
                  filterable>
         <el-option
             v-for="item in tagList"
@@ -187,6 +233,7 @@ onBeforeMount(() => {
           :auto-upload="false"
           :on-change="handChange"
           :on-remove="handRemove"
+          :disabled="uploadFileState"
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
         <div class="el-upload__text">
@@ -199,10 +246,14 @@ onBeforeMount(() => {
         </template>
       </el-upload>
     </el-form-item>
+    <el-form-item label="文件上传进度" v-show="uploadFileState">
+      <el-progress style="width: 100%;height: auto" :percentage="uploadProgress" :color="uploadColors"/>
+    </el-form-item>
+
   </el-form>
   <template #footer>
       <span class="dialog-footer">
-        <el-button @click="closeNormalResource" :disabled="loading">取消</el-button>
+        <el-button @click="closeNormalResource" :disabled="loading || uploadFileState">取消</el-button>
         <tc-button-conform @click="upload"
                            :disabled="uploadState(normalResourceInfo, resourceFile) || loading">{{ buttonText }}</tc-button-conform>
       </span>

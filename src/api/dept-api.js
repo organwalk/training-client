@@ -1,5 +1,4 @@
 import http from "@/api/http";
-import {getUserAccountByKeyword} from "@/api/user-api";
 // 创建新部门
 export function creatDeptAccount(apiObj){
     return http.post('/dept/v3/department', apiObj)

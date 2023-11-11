@@ -39,3 +39,21 @@ export function getArrayChanges(originalArray, modifiedArray) {
         increased: increasedValues
     };
 }
+
+// 计算文件哈希值
+export function calculateHash(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const dataBuffer = event.target.result;
+            crypto.subtle.digest('SHA-256', dataBuffer)
+                .then(hashBuffer => {
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                    resolve(hashHex);
+                })
+                .catch(error => reject(error));
+        };
+        reader.readAsArrayBuffer(file);
+    })
+}
