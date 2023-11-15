@@ -36,8 +36,12 @@ const login = async () => {
         switch (sessionStorage.getItem("auth_name")){
           case "admin":
             window.location.href = "/admin/user"
+                break
+          case "teacher":
+            window.location.href = "/teacher"
+                break
         }
-      },1000)
+      },500)
     }
   })
 }

@@ -23,7 +23,7 @@ const loadingDataList = async () => {
       teacherId.value = teacherIdListRes.data.map(item => item.training_teacher_id)
       const progressPromise = teacherList.value.filter(item => teacherId.value.includes(item.value))
           .map(async item => {
-            const teaAndLesProgress = await getTeacherAndLessonProgress(item.value);
+            const teaAndLesProgress = await getTeacherAndLessonProgress(props.planId, item.value);
             item.progress = teaAndLesProgress.data
             return item
           });
@@ -42,7 +42,7 @@ const change = async (teacherIdList) => {
   emit('getTeacherIdList', teacherIdList)
   const progressPromise = teacherList.value.filter(item => teacherIdList.includes(item.value))
       .map(async item => {
-        const teaAndLesProgress = await getTeacherAndLessonProgress(item.value);
+        const teaAndLesProgress = await getTeacherAndLessonProgress(props.planId, item.value);
         item.progress = teaAndLesProgress.data;
         return item
       });

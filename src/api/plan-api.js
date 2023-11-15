@@ -63,3 +63,13 @@ export function addTeacherToPlan(planId, teacherList){
 export function addStudentToPlan(planId, studentList){
     return http.post('/training/v3/plan/student/' + planId + '?studentIdList=' + studentList)
 }
+
+// 获取指定教师所处的培训计划列表
+export function getPlanListByTeacherId(teacherId){
+    return http.get('/training/v2/teacher/plan/' + teacherId)
+}
+
+// 创建一门课程
+export function addLessonByTeacher(planId, obj){
+    return http.post('/training/v2/lesson/' + planId, obj)
+}

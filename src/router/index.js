@@ -21,6 +21,8 @@ router.beforeEach((to, from, next) => {
     } else {
         if (sessionStorage.getItem('auth_name') === 'admin' && to.fullPath.startsWith('/admin/')){
             next()
+        }else if (sessionStorage.getItem('auth_name') === 'teacher' && to.fullPath.startsWith('/teacher')){
+            next()
         }
     }
 })

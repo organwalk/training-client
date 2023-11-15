@@ -57,3 +57,35 @@ export function calculateHash(file) {
         reader.readAsArrayBuffer(file);
     })
 }
+
+// 培训计划选择器列表整理
+const planState = {
+    "timeout": "逾期超时",
+    "end": "已经结束",
+    "over": "已经完成",
+    "ongoing": "正在进行"
+};
+export function selectPlanListSwitch(dataList){
+    // 根据 training_state 分类数据
+    const categorizedData = {};
+    dataList.forEach(item => {
+        const state = planState[item.training_state];
+        if (categorizedData[state]) {
+            categorizedData[state].push({
+                value: `${item.id}`,
+                label: item.training_title
+            });
+        } else {
+            categorizedData[state] = [{
+                value: `${item.id}`,
+                label: item.training_title
+            }];
+        }
+    });
+    return Object.keys(categorizedData).map(state => {
+        return {
+            label: state,
+            options: categorizedData[state]
+        };
+    });
+}

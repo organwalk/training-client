@@ -32,6 +32,11 @@ const routes = [
                 component:() => import('@/view/admin-view/AdminPlanManage.vue')
             }
         ]
+    },
+    {
+        path: '/teacher',
+        name: 'teacherView',
+        component:() => import('@/view/teacher-view/TeacherView.vue'),
     }
 ]
 

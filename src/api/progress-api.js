@@ -6,8 +6,8 @@ export function getPlanProgress(){
 }
 
 // 获取指定教师所有课程总体平均进度的平均值和各课程总体平均进度百分比数据列表
-export function getTeacherAndLessonProgress(teacherId){
-    return http.get('/progress/v4/lesson/teacher/persent/' + teacherId)
+export function getTeacherAndLessonProgress(planId, teacherId){
+    return http.get('/progress/v4/lesson/teacher/persent/' + planId + '/' + teacherId)
 }
 
 // 获取学员在指定课程下学习进度百分比数据
