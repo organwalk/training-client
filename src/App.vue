@@ -11,7 +11,7 @@ html body{
   padding: 0;
   margin: 0;
 }
-::-webkit-scrollbar {
+body::-webkit-scrollbar {
   display: none;
 }
 </style>

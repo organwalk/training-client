@@ -73,3 +73,38 @@ export function getPlanListByTeacherId(teacherId){
 export function addLessonByTeacher(planId, obj){
     return http.post('/training/v2/lesson/' + planId, obj)
 }
+
+// 更新课程信息
+export function updateLessonByTeacher(teacherId, lessonId, obj){
+    return http.put('/training/v2/lesson/info/' + teacherId + '/' + lessonId, obj)
+}
+
+// 获取指定课程的详细信息
+export function getLessonDetail(lessonId){
+    return http.get('/training/v1/lesson/info/' + lessonId)
+}
+
+// 删除课程
+export function deleteLessonByLessonId(lessonId){
+    return http.delete('/training/v2/lesson/' + lessonId)
+}
+
+// 添加指定课程章节
+export function addChapterByLesson(lessonId, obj){
+    return http.post('/training/v2/lesson/chapter/' + lessonId, obj)
+}
+
+// 获取指定课程章节列表
+export function getLessonChapterList(lessonId){
+    return http.get('/training/v1/lesson/chapter/' + lessonId)
+}
+
+// 删除指定章节
+export function deleteChapterById(chapterId){
+    return http.delete('/training/v2/lesson/chapter/' + chapterId)
+}
+
+// 设定课程状态为发布
+export function startLesson(lessonId){
+    return http.put('/training/v2/lesson/state/' + lessonId)
+}

@@ -30,16 +30,18 @@ const addLesson = withLoading(async () => {
   const res = await addLessonByTeacher(props.planId, lessonObj)
   if (res.code === 2002){
     ElMessage.success(res.msg)
-    closeDialog()
+    closeDialog('add')
   }
 }, loading)
 
 
 
 // 关闭对话框时
-const closeDialog = () => {
+const closeDialog = (des) => {
+  lessonObj.lesson_name = ""
+  lessonObj.lesson_des = ""
   showAddLessonDialog.value = false
-  emit('closeAddLessonDialog', false)
+  emit('closeAddLessonDialog', des + '-' + Math.random())
 }
 </script>
 
@@ -49,7 +51,6 @@ const closeDialog = () => {
              width="45%"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
-             :before-close="closeDialog"
              :show-close="false"
              id="add-lesson"
              title="添加新课程"
@@ -67,7 +68,7 @@ const closeDialog = () => {
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="closeDialog" :disabled="loading">取消</el-button>
+        <el-button @click="closeDialog('cancel')" :disabled="loading">取消</el-button>
         <el-button type="primary" @click="addLesson" :disabled="objectsIsNull(lessonObj) || loading" color="#333333">
           确认
         </el-button>

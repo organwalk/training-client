@@ -58,6 +58,7 @@ export function calculateHash(file) {
     })
 }
 
+
 // 培训计划选择器列表整理
 const planState = {
     "timeout": "逾期超时",
@@ -87,5 +88,51 @@ export function selectPlanListSwitch(dataList){
             label: state,
             options: categorizedData[state]
         };
+    });
+}
+
+
+// 处理进度
+export function processProgress(objList) {
+    objList.forEach(obj => {
+        // 检查 total_progress 是否为 undefined，如果是则设为 0
+        if (obj.total_progress === undefined) {
+            obj.total_progress = 0;
+        } else {
+            // 将其他类型的值转换为整数并乘以 100
+            obj.total_progress = parseInt(obj.total_progress) * 100 || 0;
+        }
+    });
+    return objList;
+}
+
+// 深度检查两个对象的值是否相等
+export function deepCompareObject(obj1, obj2) {
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+        return obj1 === obj2;
+    }
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) {
+        return false;
+    }
+
+    for (const key of keys1) {
+        if (!deepCompareObject(obj1[key], obj2[key])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// 为数组加上PID对象
+export function setObjectListPID(objList) {
+    return objList.map((obj, index) => {
+        obj.p_id = `P${index + 1}`;
+        return obj;
     });
 }
