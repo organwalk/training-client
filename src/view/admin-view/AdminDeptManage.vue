@@ -2,13 +2,9 @@
 import {onBeforeMount, ref} from "vue";
 import AdminDeptDialog from "@/view/admin-view/dialog/AdminDeptDialog.vue";
 import TcPagination from "@/components/container/tc-pagination.vue";
-import {getDeptList,
-        getDeptMember,
-        getDeptAccountByKeyword} from "@/api/dept-api";
-import {getUserAccountList,
-        getUserInfoByUid} from "@/api/user-api";
+import {getDeptAccountByKeyword, getDeptList, getDeptMember} from "@/api/dept-api";
+import {getUserAccountList1, getUserInfoByUid} from "@/api/user-api";
 import {Plus, Search} from "@element-plus/icons-vue";
-
 
 
 // 头部标签栏
@@ -19,8 +15,8 @@ const loading = ref(false)
 
 const getNowTab = (val) => {
   nowTab.value = val.index
+  loading.value = true
   getDeptListFromApi(0)
-
 }
 
 
@@ -33,28 +29,37 @@ const closeDialog = (val) => {
 }
 
 
-const newDept = (val) => {
+const newDept = async (val) => {
   if(val){
-    getDeptListFromApi(0)
+   await getDeptListFromApi(0)
+  }
+}
+
+const newMemberDept = async(val) => {
+  if(val){
+    await getDeptMemberList(dept_id.value,0)
+    await getNewMemberNumber(1)
   }
 }
 
 
-const deptInfoList = ref()
+
 const total = ref()
 const dept_id = ref()
-
 const uid = ref()
+const deptInfoList = ref()
+
 
 
 //用户列表
 const userAccountList = ref([])
 const getUserAccountListFromApi = async () => {
-  const res = await getUserAccountList('1', 0)
+  const res = await getUserAccountList1('1', 0)
   if (res.code === 2002) {
     userAccountList.value = res.data.map(({id, realName }) => ({uid:id , label:realName }))
   }
 }
+
 
 
 // 获取部门列表
@@ -77,10 +82,8 @@ const getDeptListFromApi = async (offset) =>{
 
 
 
-
-const deptMemberList = ref([])
-
 //查看部门详情
+const deptMemberList = ref([])
 const handleViewDept = async (dept_id) => {
   viewDept(dept_id)
   await getDeptMemberList(dept_id)
@@ -100,13 +103,13 @@ const putDept = () =>{
 }
 
 
-
 //获取指定部门--成员列表
-const getDeptMemberList = async(m_deptId) => {
-  const res = await getDeptMember(m_deptId, 10, 0)
+const getDeptMemberList = async(m_deptId,offset=0) => {
+  const res = await getDeptMember(m_deptId, 10, offset)
   if (res.code === 5005) {
     deptMemberList.value = []
   }else{
+    loading.value = false
     total.value = res.total
     deptMemberList.value = res.data
   }
@@ -115,10 +118,102 @@ const getDeptMemberList = async(m_deptId) => {
 
 //模糊查询部门列表
 const keyword = ref('')
-
+// const deptByKeyword = async (keyword) => {
+//   if (keyword.length !== 0 && keyword.replace(/\s/g, '') !== ''){
+//     loading.value = true
+//     const res = await getDeptAccountByKeyword(keyword, nowTab.value, 0)
+//     if (res.code === 5005){
+//       deptInfoList.value = []
+//     }else {
+//       total.value = res.total
+//       deptInfoList.value = res.data
+//     }
+//     loading.value = false
+//   }else {
+//     loading.value = true
+//     await getDeptListFromApi(0)
+//   }
+// }
 const deptByKeyword = async (keyword) => {
+  if (keyword.length !== 0 && keyword.replace(/\s/g, '') !== ''){
+    loading.value = true
+    const res = await getDeptAccountByKeyword(keyword, nowTab.value, 0)
 
+    if (res.code === 5005){
+      deptInfoList.value = []
+    }else {
+      total.value = res.total
+      deptInfoList.value = res.data
+    }
+    await getUserAccountListFromApi()
+    const promises = deptInfoList.value.map(async (item) => {
+      const res = await getUserInfoByUid(item.headId);
+      item.headId = res.data.realName;
+    });
+    await Promise.all(promises);
+    loading.value = false
+  }else {
+    loading.value = true
+    await getDeptListFromApi(0)
+  }
 }
+
+
+
+// 模糊查询成员列表
+const memberKeyword = ref('')
+
+function matchText(a, b) {
+  const regex = new RegExp(a, 'i');
+  return regex.test(b);
+}
+
+const searchFunction = (searchList, memberKeyword) => {
+  // 准备一个保存搜索结果的数据
+  const result = ref([])
+  // 直接从接口数据开始查询，
+  searchList.find(item => {
+    // 当用户的真实姓名和输入的关键词相等时
+    if (matchText(memberKeyword, item.realName)){
+      // 把匹配的数据，加入到结果集中
+      result.value.push(item)
+    }
+  })
+  return result.value
+}
+const isShowMemberPage = ref(true)
+const memberByKeyword = async (memberKeyword) => {
+  if (memberKeyword === ""){
+    isShowMemberPage.value = true
+    await getDeptMemberList(dept_id.value)
+  }else {
+    const res = await getDeptMember(dept_id.value, 10, 0)
+    const resTotal = res.total
+    loading.value = true;
+    // 开始搜索
+    let result = searchFunction(res.data, memberKeyword)
+    if (result.length === 0){
+      // 搜索不到相关信息
+      let num = 10
+      if (resTotal > 10){
+        while (num <= resTotal) {
+          const res = await getDeptMember(dept_id.value, 10, num);
+          result = searchFunction(res.data, memberKeyword);
+          num += 10;
+        }
+      }
+    }
+
+    // 表格中的数据，替换成搜索结果的数据
+    deptMemberList.value = result
+    isShowMemberPage.value = false
+    loading.value = false;
+    if (deptMemberList.value === []) {
+      await getDeptListFromApi(0)
+    }
+  }
+}
+
 
 
 
@@ -128,6 +223,17 @@ const getNewPageNumber = (val) => {
   const offset = (val-1) * 10
   getDeptListFromApi(offset)
 }
+
+
+
+const getNewMemberNumber = (val) => {
+  const offset = (val-1) * 10
+  const m_deptId = dept_id.value
+  getDeptMemberList(m_deptId,offset)
+}
+
+
+
 
 
 //父类发给子类的事件，@子类发给父类
@@ -154,7 +260,6 @@ onBeforeMount(() => {
       </el-col>
     </el-row><br/>
 
-
 <!--  新增部门栏-->
   <div style="height: 5vh;overflow-y: auto">
     <el-row>
@@ -174,7 +279,6 @@ onBeforeMount(() => {
     </el-row><br/>
   </div>
 
-
 <!--  部门展示栏-->
   <el-row >
     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" >
@@ -193,7 +297,7 @@ onBeforeMount(() => {
           <el-button size="small" @click="handleViewDept(scope.row.id )">
             查看
           </el-button>
-          <el-button size="small" @click="() => {showDeptDialog= true; title='编辑部门';dept_id = scope.row.id}">
+          <el-button size="small" type="primary" @click="() => {showDeptDialog= true; title='编辑部门';dept_id = scope.row.id}">
             编辑
           </el-button>
           <el-button size="small" type="danger" @click="() => {showDeptDialog= true; title='删除部门'; dept_id = scope.row.id}">
@@ -202,11 +306,14 @@ onBeforeMount(() => {
         </template>
       </el-table-column>
     </el-table><br/>
+
     <!--  分页器区域-->
-      <el-row>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-          <slot/>
-      <tc-pagination :total="total" @page-current-change="getNewPageNumber"/>
+      <el-row style="margin-top: auto;">
+        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" >
+      <tc-pagination :total="total"
+                     @page-current-change="getNewPageNumber"
+                     style="position: fixed;bottom: 0;left: 50%;
+    "/>
         </el-col>
       </el-row>
     </el-col>
@@ -215,10 +322,12 @@ onBeforeMount(() => {
 
 
 
+<!--  -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+
 
 <!--  查看部门详情-->
   <div v-if="showNewPage">
-    <el-row>
+    <el-row style="height: 7.2vh">
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <el-button @click="putDept"
                    text  color="#FFFFFF"  style="width: 6.4% ; height: 6vh; color:#002fa7;border: none;
@@ -228,7 +337,6 @@ onBeforeMount(() => {
       </el-col>
     </el-row>
     <br/>
-
 
 <!--      新增成员-->
       <div style="height: 5vh;overflow-y: auto">
@@ -240,7 +348,10 @@ onBeforeMount(() => {
                 <el-button :icon="Plus" type="primary" color="#002fa7"  style="width: 100%" @click="() => {showDeptDialog = true; title = '新增成员'}">新增成员</el-button>
               </el-col>
               <el-col :xs="10" :sm="10" :md="10" :lg="10" :xl="10">
-                <el-input/>
+                  <el-input v-model="memberKeyword"
+                            @input="memberByKeyword"
+                            :prefix-icon="Search"
+                            placeholder="请输入成员信息-关键词"/>
               </el-col>
             </el-row>
           </el-col>
@@ -261,7 +372,10 @@ onBeforeMount(() => {
 
           <el-table-column label="操作" fixed="right">
             <template #default="scope">
-              <el-button size="small" type="danger" @click="() => {showDeptDialog= true; title='删除成员'; dept_id = scope.row.id; uid= scope.row.id}">
+              <el-button size="small" type="danger" @click="() => {
+                showDeptDialog= true;
+                title='删除成员';
+                uid= scope.row.id}">
                 删除
               </el-button>
             </template>
@@ -270,13 +384,14 @@ onBeforeMount(() => {
       </el-row>
 
       <!--  分页器区域-->
-      <el-row>
+      <el-row style="margin-top: auto;">
         <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-          <slot/>
-          <tc-pagination :total="total" @page-current-change="getNewPageNumber"/>
+          <tc-pagination :total="total"
+                         v-show="isShowMemberPage"
+                         @page-current-change="getNewMemberNumber"
+                         style="position: fixed;bottom: 0;left: 50%"/>
         </el-col>
       </el-row>
-
   </div>
 
 
@@ -287,7 +402,10 @@ onBeforeMount(() => {
                    @close-dialog="closeDialog"
                    v-if="showDeptDialog"
                     @new-dept="newDept"
-                   :title="title" :dept_id="dept_id"></AdminDeptDialog>
+                   @new-member-dept="newMemberDept"
+                   :title="title"
+                   :uid="uid"
+                   :dept_id="dept_id"></AdminDeptDialog>
 </template>
 
 

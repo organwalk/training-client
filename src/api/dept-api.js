@@ -1,5 +1,4 @@
 import http from "@/api/http";
-import {getUserAccountByKeyword} from "@/api/user-api";
 // 创建新部门
 export function creatDeptAccount(apiObj){
     return http.post('/dept/v3/department', apiObj)
@@ -41,7 +40,7 @@ export function deleteDeptMember(dept_id, uid) {
 
 //模糊查询部门
 export function getDeptAccountByKeyword(keyword, pageSize, offset){
-    return http.get('/dept/v1/department/' +  keyword + '/' + pageSize + '/' + offset)
+    return http.get('/dept/v1/department/keyword/' +  keyword + '/' + pageSize + '/' + offset)
 }
 
 

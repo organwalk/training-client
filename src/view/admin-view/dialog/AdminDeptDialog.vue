@@ -6,7 +6,7 @@ import {deleteDeptByDept_id,
   addDeptMember,
   creatDeptAccount,
   deleteDeptMember} from "@/api/dept-api";
-import {getUserAccountList} from "@/api/user-api";
+import {getUserAccountList1} from "@/api/user-api";
 import {ElMessage} from "element-plus";
 
 
@@ -16,7 +16,8 @@ const props = defineProps({
   showDeptDialog: Boolean,
   title: String,
   dept_id: Number,
-  uid: Number
+  uid: Number,
+  showNewPage: Boolean
 })
 
 
@@ -26,7 +27,7 @@ watchEffect(() => {
   showDeptDialog.value = props.showDeptDialog
 })
 //emit，指定一个事件发送给父类
-const emit = defineEmits(['closeDialog', 'newDept'])
+const emit = defineEmits(['closeDialog', 'newDept' , 'newMemberDept' ])
 const closeDialog = () => {
   showDeptDialog.value = false
   emit('closeDialog', false)
@@ -63,6 +64,8 @@ const addDept = async () => {
     ElMessage.success((res.msg))
     emit('newDept', true)
     closeDialog()
+    //刷新页面（二）
+    // location.reload();
   }
 }
 
@@ -114,7 +117,7 @@ const addDeptPeople = async () => {
   const res = await addDeptMember(obj)
   if (res.code === 2002) {
     ElMessage.success(res.msg)
-    emit('newDept', true)
+    emit('newMemberDept', true)
     closeDialog()
   }
 }
@@ -123,24 +126,26 @@ const addDeptPeople = async () => {
 
 //删除部门成员
 const deleteDeptPeople = async () => {
-  const res = await deleteDeptMember( props.uid,props.dept_id)
+  console.log(props.uid)
+  const res = await deleteDeptMember(props.dept_id, props.uid)
   if (res.code === 2002) {
     ElMessage.success(res.msg)
-    emit('newDept', true)
+    emit('newMemberDept', true)
     closeDialog()
   }
 }
 
 
-
 //获取用户列表
-const userAccountList = ref([])
+const userAccountList = ref()
 const getUserAccountListFromApi = async () => {
-  const res = await getUserAccountList('1', 0)
-  if (res.code === 2002) {
-    userAccountList.value = res.data.map(({id , realName}) => ({value: id, label:realName}))
-  }
+    const res = await getUserAccountList1('1', 0)
+    if (res.code === 2002) {
+      userAccountList.value = res.data.map(({id, realName}) => ({value: id, label: realName}))
+    }
 }
+
+
 
 
 // 解释器执行之前
