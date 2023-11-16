@@ -128,6 +128,8 @@ const deleteUser = async () => {
     ElMessage.success(res.msg)
     emit('newUser', true)
     closeDialog()
+  }else {
+    loading.value = false
   }
 }
 

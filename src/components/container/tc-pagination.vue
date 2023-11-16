@@ -3,10 +3,15 @@ import {defineProps, defineEmits} from "vue"
 const props = defineProps({
   total:Number
 })
+
 const emit = defineEmits(['pageCurrentChange'])
 const whenCurrentChange = (val) => {
   emit('pageCurrentChange', val)
 }
+
+
+
+
 </script>
 
 <template>

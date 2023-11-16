@@ -42,3 +42,11 @@ export function getTeacherList(){
 export function getStudentList(){
     return http.get('/user/v3/account/1/999999/0')
 }
+
+
+//部门获取用户列表
+export function getUserAccountList1(type, offset){
+    return http.get('/user/v3/account/' + type + '/999/' + offset)
+}
+
+

@@ -40,7 +40,7 @@ export function deleteDeptMember(dept_id, uid) {
 
 //模糊查询部门
 export function getDeptAccountByKeyword(keyword, pageSize, offset){
-    return http.get('/dept/v1/department/' +  keyword + '/' + pageSize + '/' + offset)
+    return http.get('/dept/v1/department/keyword/' +  keyword + '/' + pageSize + '/' + offset)
 }
 
 
