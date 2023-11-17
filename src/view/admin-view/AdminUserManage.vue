@@ -139,6 +139,7 @@ onBeforeMount(() => {
         </template>
       </el-table-column>
     </el-table><br/>
+
     <!--  分页器区域-->
     <tc-container-full-row style="margin-top: auto;">
       <tc-pagination :total="total" @page-current-change="getNewPageNumber"/>
