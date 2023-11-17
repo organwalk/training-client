@@ -136,3 +136,12 @@ export function setObjectListPID(objList) {
         return obj;
     });
 }
+
+// 生成随机哈希
+export async function generateRandomHash() {
+    const buffer = new Uint8Array(16);
+    window.crypto.getRandomValues(buffer);
+    const hashArray = Array.from(buffer)
+        .map(b => b.toString(16).padStart(2, '0'));
+    return hashArray.join('');
+}

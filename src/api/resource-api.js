@@ -87,3 +87,38 @@ export function editTag(tagId, tagName){
 export function deleteTag(tagId){
     return http.delete('/resource/v3/tag/' + tagId)
 }
+
+// 获取课程教材文件对象
+const getResourceLessonObj = (obj) => {
+    const formData = new FormData()
+    formData.append('lesson_id', obj.lesson_id)
+    formData.append('teacher_id', obj.teacher_id)
+    formData.append('chapter_id', obj.chapter_id)
+    formData.append('resource_file', obj.resource_file)
+    formData.append('file_hash', obj.file_hash)
+    formData.append('file_size', obj.file_size)
+    formData.append('file_chunks_sum', obj.file_chunks_sum)
+    formData.append('file_now_chunk', obj.file_now_chunk)
+    formData.append('file_origin_name', obj.file_origin_name)
+    return formData
+}
+
+// 上传指定课程教材
+export function uploadLessonResource(obj){
+    return http.formDataPost('/resource/v2/lesson', getResourceLessonObj(obj))
+}
+
+// 获取课程下的各章节资源列表
+export function getResourceLessonRid(lessonId){
+    return http.get('/resource/v2/lesson/list/' + lessonId)
+}
+
+// 根据课程教材ID获取教材
+export function getResourceLesson(resourceId){
+    return http.get('/resource/v2/lesson/' + resourceId)
+}
+
+// 重传课程教材
+export function reUploadLessonResource(obj){
+    return http.formDataPut('/resource/v2/lesson', getResourceLessonObj(obj))
+}

@@ -10,6 +10,7 @@ import {getDeptInfo} from "@/api/dept-api";
 import {getTeacherAndLessonProgress} from "@/api/progress-api";
 import AddLessonDialog from "@/view/teacher-view/dialog/AddLessonDialog.vue";
 import TeacherChapterManage from "@/view/teacher-view/TeacherChapterManage.vue";
+import {useRouter} from "vue-router";
 
 // 定义全局变量
 const loading = ref(false)
@@ -130,6 +131,10 @@ const refreshData = async (state) => {
 }
 
 
+// 获取当前路由
+const router = useRouter()
+
+
 // 生命周期钩子
 onBeforeMount(async () => {
   // 加载培训计划选择器
@@ -158,9 +163,10 @@ onBeforeMount(async () => {
       </el-row>
     </el-card>
   </tc-container-full-row>
+  <router-view/>
 
   <!-- 中央内容区 -->
-  <tc-container-full-row v-loading="loading">
+  <tc-container-full-row v-loading="loading" v-show="!router.currentRoute.value.path.includes('/teacher/edit')">
     <el-row>
       <!-- 左侧 -->
       <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">

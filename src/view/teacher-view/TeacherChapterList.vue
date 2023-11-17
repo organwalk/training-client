@@ -5,7 +5,8 @@ import {withLoading} from "@/utils/functionUtil";
 import {deleteChapterById, getLessonChapterList} from "@/api/plan-api";
 import {ElMessage} from "element-plus";
 import {setObjectListPID} from "@/utils/dataUtil";
-import UpdateChapterDialog from "@/view/teacher-view/dialog/UpdateChapterDialog.vue";
+import {useRouter} from "vue-router";
+import {getResourceLessonRid} from "@/api/resource-api";
 
 
 
@@ -26,12 +27,29 @@ const loadingDataList = withLoading(async () => {
   const res = await getLessonChapterList(lessonId.value)
   if (res.code === 2002){
     const result = setObjectListPID(res.data).reverse()
-    dataList.value = result
-    originDataList.value = result
+    await loadingResourceLessonList(result)
   }else {
     dataList.value = []
   }
 }, loading)
+
+// 载入资源列表
+const loadingResourceLessonList = async (chapterList) => {
+  const res = await getResourceLessonRid(lessonId.value)
+  if (res.code === 2002){
+    const process_result = chapterList.map(c_item => {
+      const updatedItem = { ...c_item }; // 创建一个新对象以避免直接修改原始数据
+      const foundRItem = res.data.find(r_item => r_item.chapterId === c_item.id);
+      if (foundRItem) {
+        updatedItem.r_id = foundRItem.id;
+        updatedItem.up_datetime = foundRItem.up_datetime;
+      }
+      return updatedItem;
+    });
+    dataList.value = process_result
+    originDataList.value = process_result
+  }
+}
 
 
 // 监听器
@@ -90,14 +108,18 @@ const deleteChapter = withLoading(async (chapterId) => {
 }, loading)
 
 
-// 控制对话框
-const showUpdateChapterDialog = ref(false)
-const chooseChapterName = ref('')
-const closeUpdateChapterDialog = async (des) => {
-  showUpdateChapterDialog.value = false
-  if (des.split('-')[0] !== 'cancel'){
-    await loadingDataList()
-  }
+// 进行章节编辑
+const router = useRouter()
+const editChapter = (chapterId, chapterName, resourceId) => {
+  router.push({
+    path: '/teacher/edit',
+    query: {
+      lesson_id:lessonId.value,
+      chapter_id: chapterId,
+      chapter_name: chapterName,
+      resource_id: resourceId
+    }
+  })
 }
 </script>
 
@@ -114,7 +136,7 @@ const closeUpdateChapterDialog = async (des) => {
             </el-col>
             <el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8" align="right">
               <el-button :icon="Edit" style="background-color: transparent"
-                         @click="showUpdateChapterDialog = true;chooseChapterName = row.chapterName">Edit</el-button>
+                         @click="editChapter(row.id, row.chapterName, row.r_id)">Edit</el-button>
               <el-button :icon="Delete" style="background-color: transparent" @click="deleteChapter(row.id)"/>
             </el-col>
           </el-row>
@@ -122,10 +144,6 @@ const closeUpdateChapterDialog = async (des) => {
       </template>
     </el-table-column>
   </el-table>
-
-  <update-chapter-dialog :show-update-chapter-dialog="showUpdateChapterDialog"
-                         :chapter-name="chooseChapterName"
-                         @close-update-chapter-dialog="closeUpdateChapterDialog"/>
 </template>
 
 

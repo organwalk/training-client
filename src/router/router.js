@@ -37,6 +37,13 @@ const routes = [
         path: '/teacher',
         name: 'teacherView',
         component:() => import('@/view/teacher-view/TeacherView.vue'),
+        children: [
+            {
+                path:'edit',
+                name: 'teacherChapterEditView',
+                component:() => import('@/view/teacher-view/TeacherChapterEditView.vue')
+            }
+        ]
     }
 ]
 

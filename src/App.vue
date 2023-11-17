@@ -10,8 +10,7 @@
 html body{
   padding: 0;
   margin: 0;
-}
-body::-webkit-scrollbar {
-  display: none;
-}
+}::-webkit-scrollbar {
+   display: none;
+ }
 </style>
