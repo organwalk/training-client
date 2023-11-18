@@ -8,6 +8,8 @@ import VMdEditor from '@kangc/v-md-editor';
 import '@kangc/v-md-editor/lib/style/base-editor.css';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
 import '@kangc/v-md-editor/lib/theme/style/github.css';
+import vue3videoPlay from "vue3-video-play"; // 引入组件
+import "vue3-video-play/dist/style.css"; // 引入css
 
 // highlightjs
 import hljs from 'highlight.js';
@@ -20,7 +22,8 @@ const app = createApp(App)
 app.use(ElementPlus)
 app.use(RouterIndex)
 app.use(btn)
-app.use(VMdEditor);
+app.use(VMdEditor)
+app.use(vue3videoPlay);
 app.mount('#app')
 
 /**

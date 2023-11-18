@@ -122,3 +122,13 @@ export function getResourceLesson(resourceId){
 export function reUploadLessonResource(obj){
     return http.formDataPut('/resource/v2/lesson', getResourceLessonObj(obj))
 }
+
+// 获取指定教材资源ID
+export function getResourceLessonId(lessonId, chapterId){
+    return http.get('/resource/v2/lesson/id/' + lessonId + '/' + chapterId)
+}
+
+// 删除指定课程章节教材文件
+export function deleteResourceLesson(teacherId, lessonId, chapterId){
+    return http.delete('/resource/v2/lesson/' + teacherId + '/' + lessonId + '/' + chapterId)
+}
