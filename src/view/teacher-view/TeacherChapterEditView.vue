@@ -13,7 +13,11 @@ import {
 import {withLoading} from "@/utils/functionUtil";
 import {ElMessage} from "element-plus";
 import {UploadFilled, Document, Delete, ArrowLeft} from "@element-plus/icons-vue";
-import "vue3-video-play/dist/style.css";
+import TcVideo from "@/components/video/tc-video.vue";
+import {getVideoTestList} from "@/api/plan-api";
+import editVideoTest from "@/assets/edit_video_test.png"
+import AddVideoTestDialog from "@/view/teacher-view/dialog/AddVideoTestDialog.vue";
+import GetVideoTestListDialog from "@/view/teacher-view/dialog/GetVideoTestListDialog.vue";
 
 // 定义全局变量
 const preLoading = ref(false)
@@ -23,6 +27,7 @@ const lessonId = router.currentRoute.value.query.lesson_id
 const chapterId = router.currentRoute.value.query.chapter_id
 const chapterName = router.currentRoute.value.query.chapter_name
 const resourceId = router.currentRoute.value.query.resource_id
+const isVideo = router.currentRoute.value.query.isVideo
 const chapterObj = reactive({
   chapter_name: chapterName
 })
@@ -74,7 +79,7 @@ const preLoadingResourceLesson = async () => {
       markdownText.value = String(res.data)
     }else if (type === 'video'){
       showUploadVideo.value = false
-      await loadingVideo(resourceId)
+      await loadingVideo()
     }
   }
   preLoading.value = false
@@ -114,16 +119,21 @@ const getFileTotalSlice = (size) => {
   return Math.ceil(size / fileSliceSize)
 }
 const submitFile = withLoading(async () => {
+  if(showProgress.value){
+    loading.value = false
+  }
   let file
+  let fileName
   if (localFile.value){
     file = localFile.value.raw
+    fileName = localFile.value.name
   }else {
     file = new Blob([markdownText.value], {type: 'text/markdown'});
+    fileName = await generateRandomHash() + '.md'
   }
   const hash = await calculateHash(file)
   const size = file.size
   const totalSlice = getFileTotalSlice(size)
-  const fileName = await generateRandomHash() + '.md'
 
   await uploadResource(file, hash, size, totalSlice, fileName)
 
@@ -185,7 +195,7 @@ const uploadResource = async (file, hash, size, totalSlice, fileName) => {
         loading.value = true
         const idRes = await getResourceLessonId(lessonId, chapterId)
         loading.value = false
-        await loadingVideo(idRes.data)
+        await loadingVideo(idRes)
       }else {
         setTimeout(() => {
           window.location.href = '/teacher'
@@ -217,6 +227,26 @@ const handRemove = () => {
   localFile.value = ''
 }
 
+// 返回
+const back = () => {
+  showChoose.value = !showChoose.value
+  if (router.currentRoute.value.fullPath.includes('isVideo')){
+    let obj = {
+      lesson_id:lessonId,
+      chapter_id:chapterId,
+      chapter_name:chapterName,
+    }
+    if (resourceId){
+      obj.resource_id = resourceId
+    }
+    router.push({
+      path:'/teacher/edit',
+      query: obj,
+    }).then(() => {
+      window.location.reload();
+    })
+  }
+}
 // 提交文件
 const isSubmit = ref(false)
 const showProgress = ref(false)
@@ -241,41 +271,62 @@ const deleteFile = withLoading(async () => {
 
 
 // 播放视频
-const videoUrl = ref('')
+const videoUrl = ref("http://localhost:8180/api/resource/v1/lesson/load/" + resourceId)
 const loadingVideo = () => {
-  videoUrl.value = "http://localhost:8183/api/resource/v2/lesson/" + resourceId
-  // videoUrl.value = "http://localhost/video"
+  videoUrl.value = "http://localhost:8180/api/resource/v1/lesson/load/" + resourceId
 }
-const playOptions = reactive({
-  width: "800px", //播放器宽度
-  height: "450px", //播放器高度
-  color: "#409eff", //主题色
-  title: "", //视频名称
-  src: "http://localhost/test", //视频源
-  muted: false, //静音
-  webFullScreen: false,
-  speedRate: ["0.75", "1.0", "1.25", "1.5", "2.0"], //播放倍速
-  autoPlay: false, //自动播放
-  loop: false, //循环播放
-  mirror: false, //镜像画面
-  ligthOff: false, //关灯模式
-  volume: 0.3, //默认音量大小
-  control: true, //是否显示控制
-  controlBtns: [
-    "audioTrack",
-    "quality",
-    "speedRate",
-    "volume",
-    "setting",
-    "pip",
-    "pageFullScreen",
-    "fullScreen",
-  ], //显示所有按钮,
-});
+
+
+// 定义视频测试题相关逻辑
+const currentTime = ref(0)
+const videoTest = reactive({
+  testList:'',
+  answerList:'',
+  pauseTimeList:''
+})
+const videoTestLength = ref(0)
+
+const initVideo = async () => {
+  await loadingVideoTest()
+}
+// 获取视频测试题列表
+const testList = ref()
+const loadingVideoTest = async () => {
+  const res = await getVideoTestList(resourceId)
+  if (res.code === 2002){
+    // 赋值视频测试题列表
+    videoTest.testList = res.data
+    testList.value = res.data
+    videoTestLength.value = videoTest.testList.length
+    // 获取需要出现试题的时间列表
+    videoTest.pauseTimeList = res.data.map(obj => ({id:obj.id, test_time:obj.test_time}))
+  }
+}
+
+// 展示添加视频测试题框
+const showAddVideoTest = ref(false)
+const closeAddVideoTest = async (des) => {
+  showAddVideoTest.value = false
+  if (des.split('-')[0] !== 'cancel'){
+    await loadingVideoTest()
+  }
+}
+
+// 展示视频列表框
+const showGetVideoTestList = ref(false)
+const closeGetVideoTest = async (des) => {
+  showGetVideoTestList.value = false
+  testList.value = []
+  if (des.split('-')[0] !== 'cancel'){
+    await loadingVideoTest()
+  }
+}
+
 
 // 生命周期钩子
 onMounted(async () => {
   await setResourceLessonState()
+  await initVideo()
 })
 </script>
 
@@ -283,7 +334,7 @@ onMounted(async () => {
   <el-row>
     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
       <!-- 上传教材类型选择 -->
-      <el-card shadow="never" style="width: 50%;margin-top: 20px" v-show="showChoose" v-loading="preLoading">
+      <el-card shadow="never" style="width: 50%;margin-top: 20px" v-show="!isVideo && showChoose" v-loading="preLoading">
         <el-row>
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="left">
             <h3>|&nbsp;&nbsp;&nbsp;编辑章节信息</h3><br/>
@@ -351,7 +402,7 @@ onMounted(async () => {
       </div>
 
       <!-- 编辑视频教材 -->
-      <div v-show="!showChoose && radioVal === '讲解视频录像'">
+      <div v-show="!showChoose && radioVal === '讲解视频录像' || isVideo">
         <el-row>
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="left">
             <el-card shadow="never" style="border-top: none;border-bottom:none;overflow-y: auto"  v-loading="loading">
@@ -394,14 +445,36 @@ onMounted(async () => {
                     </div>
 
                     <!-- 视频 -->
-                    <vue3VideoPlay v-bind="playOptions">
-
-                    </vue3VideoPlay>
-
+                    <el-row :gutter="15">
+                      <el-col :xs="14" :sm="14" :md="14" :lg="14" :xl="14" align="center">
+                        <tc-video :video-url="videoUrl"
+                                  @get-current-time="(time) => { currentTime = time}"/>
+                      </el-col>
+                      <!-- 视频测试题 -->
+                      <el-col :xs="6" :sm="6" :md="6" :lg="10" :xl="6">
+                        <el-card shadow="never" >
+                          <el-row>
+                            <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
+                              <img :src="editVideoTest" style="width: 60%;" alt="404">
+                            </el-col>
+                          </el-row><br/>
+                          编辑视频测试题<br/>
+                          <el-text size="small">暂停视频，可在暂停处增加视频测试题，最多4道</el-text><br/><br/>
+                          <el-button :disabled="videoTestLength === 0">预览</el-button>
+                          <el-button :disabled="videoTestLength === 0"
+                                     @click="showGetVideoTestList = true">
+                            试题列表&nbsp;{{ videoTestLength }} / 4
+                          </el-button>
+                          <el-button type="primary" color="#333"
+                                     @click="showAddVideoTest = true"
+                                     :disabled=" currentTime === 0">增加试题</el-button>
+                        </el-card>
+                      </el-col>
+                    </el-row>
                     <el-divider/>
                     <el-row>
                       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
-                        <el-button @click="showChoose = !showChoose" :disabled="isSubmit">返回</el-button>
+                        <el-button @click="back" :disabled="isSubmit">返回</el-button>
                         <el-button @click="uploadLocalFile('video')" type="primary"
                                    :loading="isSubmit"
                                    :disabled="localFile === ''">上传</el-button>
@@ -456,6 +529,17 @@ onMounted(async () => {
       </el-col>
     </el-row>
   </el-dialog>
+
+  <AddVideoTestDialog :show-add-video-test-dialog="showAddVideoTest"
+                      :current-time=" currentTime "
+                      :resource-id="resourceId"
+                      @close-dialog = "closeAddVideoTest"/>
+
+  <GetVideoTestListDialog :show-get-video-test-dialog="showGetVideoTestList"
+                          :test-list="testList"
+                          @close-get-video-test-dialog="closeGetVideoTest">
+
+  </GetVideoTestListDialog>
 </template>
 
 <style scoped>
