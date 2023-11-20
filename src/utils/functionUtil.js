@@ -8,3 +8,14 @@ export function withLoading(fn, loading) {
         }
     };
 }
+
+export function withButtonLoading(fn, buttonLoading) {
+    return async function() {
+        try {
+            buttonLoading.value = true;
+            await fn.apply(this, arguments);
+        } finally {
+            buttonLoading.value = false;
+        }
+    };
+}

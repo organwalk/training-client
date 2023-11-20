@@ -21,3 +21,14 @@ export function getISO8601(date){
 export function validTimeout(validDate){
     return new Date(validDate) > getNowDate()
 }
+
+
+export function secondsToMinutesSeconds(seconds) {
+    const minutes = Math.floor(seconds / 60); // 计算分钟数
+    const remainingSeconds = seconds % 60; // 计算剩余的秒数
+
+    const formattedMinutes = String(minutes).padStart(2, '0'); // 格式化分钟数为两位数
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0'); // 格式化剩余秒数为两位数
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+}

@@ -108,3 +108,23 @@ export function deleteChapterById(chapterId){
 export function startLesson(lessonId){
     return http.put('/training/v2/lesson/state/' + lessonId)
 }
+
+// 获取指定视频教材测试题列表
+export function getVideoTestList(resourceId){
+    return http.get('/training/v1/lesson/test/' + resourceId)
+}
+
+// 添加指定视频教材测试题
+export function addVideoTest(resourceId, obj){
+    return http.post('/training/v2/lesson/test/' + resourceId, obj)
+}
+
+// 编辑指定视频教材测试题详细信息
+export function editVideoTest(test_id, obj){
+    return http.put('/training/v2/lesson/test/info/' + test_id, obj)
+}
+
+// 删除指定视频教材测试题
+export function deleteVideoTest(test_id){
+    return http.delete('/training/v2/lesson/test/' + test_id)
+}

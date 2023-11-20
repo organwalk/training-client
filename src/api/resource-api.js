@@ -115,7 +115,7 @@ export function getResourceLessonRid(lessonId){
 
 // 根据课程教材ID获取教材
 export function getResourceLesson(resourceId){
-    return http.get('/resource/v2/lesson/' + resourceId)
+    return http.get('/resource/v1/lesson/load/' + resourceId)
 }
 
 // 重传课程教材
