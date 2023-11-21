@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, reactive, ref, watch} from "vue";
+import {onMounted, reactive, ref, watch, watchEffect} from "vue";
 import {useRouter} from "vue-router";
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
 import {calculateHash, generateRandomHash} from "@/utils/dataUtil";
@@ -18,6 +18,7 @@ import {getVideoTestList} from "@/api/plan-api";
 import editVideoTest from "@/assets/edit_video_test.png"
 import AddVideoTestDialog from "@/view/teacher-view/dialog/AddVideoTestDialog.vue";
 import GetVideoTestListDialog from "@/view/teacher-view/dialog/GetVideoTestListDialog.vue";
+import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
 
 // 定义全局变量
 const preLoading = ref(false)
@@ -282,7 +283,8 @@ const currentTime = ref(0)
 const videoTest = reactive({
   testList:'',
   answerList:'',
-  pauseTimeList:''
+  pauseTimeList:'',
+  testTimeList:''
 })
 const videoTestLength = ref(0)
 
@@ -300,6 +302,10 @@ const loadingVideoTest = async () => {
     videoTestLength.value = videoTest.testList.length
     // 获取需要出现试题的时间列表
     videoTest.pauseTimeList = res.data.map(obj => ({id:obj.id, test_time:obj.test_time}))
+    if (videoTest.pauseTimeList.length > 0){
+      videoTest.testTimeList = videoTest.pauseTimeList.map(obj => (obj.test_time))
+    }
+
   }
 }
 
@@ -308,6 +314,7 @@ const showAddVideoTest = ref(false)
 const closeAddVideoTest = async (des) => {
   showAddVideoTest.value = false
   if (des.split('-')[0] !== 'cancel'){
+    currentTime.value = 0
     await loadingVideoTest()
   }
 }
@@ -321,6 +328,89 @@ const closeGetVideoTest = async (des) => {
     await loadingVideoTest()
   }
 }
+
+// 监听视频时间
+const isPauseVideo = ref(false)
+const question = ref()
+const isExitFullScreen = ref(false)
+watchEffect(() => {
+  if (currentTime.value && videoTest.testTimeList.length > 0){
+    // 如果当前时间刚好与测试时间相同，则触发暂停时间
+    if (videoTest.testTimeList.includes(currentTime.value)) {
+      question.value = testList.value.find(obj => obj.test_time === currentTime.value)
+
+      // 启动暂停，停止播放
+      isPauseVideo.value = true
+      isPlay.value = false
+
+      // 展示题目,并退出全屏
+      isExitFullScreen.value = true
+      showVideoTest.value = true
+    }
+  }
+})
+
+// 视频测试题相关
+const showVideoTest = ref(false)
+const isPlay = ref(false)
+const seekingTime = ref() // 正在跳帧的时间
+const closeVideoTest = (des) => {
+  // 关闭视频试题时，重置退出全屏状态
+  showVideoTest.value = false
+  isExitFullScreen.value = false
+  if (des.split('-')[0] !== 'cancel'){
+    // 保存答对的试题出现时间
+    if (sessionStorage.getItem('trueTestTime') !== null){
+      let newTrueTestTime = sessionStorage.getItem('trueTestTime') + ',' + des.split('-')[3]
+      sessionStorage.setItem('trueTestTime', newTrueTestTime)
+    }else {
+      sessionStorage.setItem('trueTestTime', des.split('-')[3])
+    }
+    isPlay.value = true
+  }
+}
+
+
+// 监听跳帧事件（当处于预览模式时）
+const isPreview = ref(true)
+const seekTime=  ref() // 想要恢复的跳帧时间
+watchEffect(() => {
+  // 处于预览模式，并拥有跳帧数值时
+  if (isPreview.value && seekingTime.value){
+    // 从会话中获取视频测试题通过时间坐标
+    let trueTestTimeList = []
+    if (sessionStorage.getItem('trueTestTime')){
+      let strTrueTestTime = sessionStorage.getItem('trueTestTime')
+      trueTestTimeList = strTrueTestTime.split(',').map(Number)
+    }
+    // 获取仍未答题的时间
+    const uniqueA = trueTestTimeList.filter((element) => !testList.value.map((obj) => (obj.test_time)).includes(element));
+    const uniqueB = testList.value.map((obj) => (obj.test_time)).filter((element) => !trueTestTimeList.includes(element));
+    let waitingAnswerTimeList = [...uniqueA, ...uniqueB]
+
+    // 如果跳帧的时间大于仍未答题的时间
+    if (seekingTime.value > waitingAnswerTimeList.sort((a, b) => a - b)[0]){
+      console.log(waitingAnswerTimeList.sort((a, b) => a - b))
+      ElMessage.warning({
+        grouping:true,
+        message:"尚有试题未回答，无法快进"
+      })
+      // 将跳帧时间恢复为上一次答题通过时间秒数 + 1s
+      if (trueTestTimeList.length > 0) {
+        seekTime.value = Number(trueTestTimeList[trueTestTimeList.length - 1]) + 1 + '-' + Math.random()
+        console.log(seekTime.value)
+      }else {
+        // 或者一题未答，则从1s开始
+        seekTime.value = 1 + '-' + Math.random()
+      }
+
+    }
+  }
+})
+
+window.addEventListener('unload', function() {
+  sessionStorage.removeItem('trueTestTime')
+});
 
 
 // 生命周期钩子
@@ -448,11 +538,19 @@ onMounted(async () => {
                     <el-row :gutter="15">
                       <el-col :xs="14" :sm="14" :md="14" :lg="14" :xl="14" align="center">
                         <tc-video :video-url="videoUrl"
-                                  @get-current-time="(time) => { currentTime = time}"/>
+                                  :pause-time-list="videoTest.pauseTimeList"
+                                  :is-pause="isPauseVideo"
+                                  :is-play="isPlay"
+                                  :is-exit-full-screen="isExitFullScreen"
+                                  :seek-time = "seekTime"
+                                  width="500" height="300"
+                                  @get-current-time="(time) => { currentTime = time}"
+                                  @get-seeking-time="(time) => { seekingTime = time}"
+                                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"/>
                       </el-col>
                       <!-- 视频测试题 -->
                       <el-col :xs="6" :sm="6" :md="6" :lg="10" :xl="6">
-                        <el-card shadow="never" >
+                        <el-card shadow="hover">
                           <el-row>
                             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
                               <img :src="editVideoTest" style="width: 60%;" alt="404">
@@ -537,9 +635,10 @@ onMounted(async () => {
 
   <GetVideoTestListDialog :show-get-video-test-dialog="showGetVideoTestList"
                           :test-list="testList"
-                          @close-get-video-test-dialog="closeGetVideoTest">
-
-  </GetVideoTestListDialog>
+                          @close-get-video-test-dialog="closeGetVideoTest" />
+  <video-test-dialog :dialog="showVideoTest"
+                     :test-obj="question"
+                     @close="closeVideoTest"/>
 </template>
 
 <style scoped>
