@@ -118,22 +118,7 @@ const getDeptMemberList = async(m_deptId,offset=0) => {
 
 //模糊查询部门列表
 const keyword = ref('')
-// const deptByKeyword = async (keyword) => {
-//   if (keyword.length !== 0 && keyword.replace(/\s/g, '') !== ''){
-//     loading.value = true
-//     const res = await getDeptAccountByKeyword(keyword, nowTab.value, 0)
-//     if (res.code === 5005){
-//       deptInfoList.value = []
-//     }else {
-//       total.value = res.total
-//       deptInfoList.value = res.data
-//     }
-//     loading.value = false
-//   }else {
-//     loading.value = true
-//     await getDeptListFromApi(0)
-//   }
-// }
+
 const deptByKeyword = async (keyword) => {
   if (keyword.length !== 0 && keyword.replace(/\s/g, '') !== ''){
     loading.value = true
@@ -261,7 +246,7 @@ onBeforeMount(() => {
     </el-row><br/>
 
 <!--  新增部门栏-->
-  <div style="height: 5vh;overflow-y: auto">
+  <div style="height: 5vh;">
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
     <el-row :gutter="15">
@@ -312,7 +297,7 @@ onBeforeMount(() => {
         <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" >
       <tc-pagination :total="total"
                      @page-current-change="getNewPageNumber"
-                     style="position: fixed;bottom: 0;left: 50%;
+                     style="position: fixed;bottom:5vh;left: 50%;
     "/>
         </el-col>
       </el-row>
@@ -339,7 +324,7 @@ onBeforeMount(() => {
     <br/>
 
 <!--      新增成员-->
-      <div style="height: 5vh;overflow-y: auto">
+      <div style="height: 5vh;">
         <el-row>
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
             <slot/>
@@ -389,7 +374,7 @@ onBeforeMount(() => {
           <tc-pagination :total="total"
                          v-show="isShowMemberPage"
                          @page-current-change="getNewMemberNumber"
-                         style="position: fixed;bottom: 0;left: 50%"/>
+                         style="position: fixed;bottom: 5vh;left: 50%"/>
         </el-col>
       </el-row>
   </div>
