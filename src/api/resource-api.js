@@ -132,3 +132,8 @@ export function getResourceLessonId(lessonId, chapterId){
 export function deleteResourceLesson(teacherId, lessonId, chapterId){
     return http.delete('/resource/v2/lesson/' + teacherId + '/' + lessonId + '/' + chapterId)
 }
+
+// 获取指定教材资源类型
+export function getResourceLessonType(resourceId){
+    return http.get('/resource/v2/lesson/type/' + resourceId)
+}
