@@ -48,6 +48,9 @@ const loadingResourceLessonList = async (chapterList) => {
     });
     dataList.value = process_result
     originDataList.value = process_result
+  }else {
+    dataList.value = chapterList
+    originDataList.value = chapterList
   }
 }
 

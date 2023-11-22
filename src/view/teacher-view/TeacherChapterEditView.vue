@@ -371,8 +371,18 @@ const closeVideoTest = (des) => {
 }
 
 
+// 设置预览模式
+const isPreview = ref(false)
+const preViewText = ref('预览')
+const onPreview = () => {
+  isPreview.value = !isPreview.value
+  if (isPreview.value){
+    preViewText.value = '关闭预览'
+  }
+}
+
+
 // 监听跳帧事件（当处于预览模式时）
-const isPreview = ref(true)
 const seekTime=  ref() // 想要恢复的跳帧时间
 watchEffect(() => {
   // 处于预览模式，并拥有跳帧数值时
@@ -390,7 +400,6 @@ watchEffect(() => {
 
     // 如果跳帧的时间大于仍未答题的时间
     if (seekingTime.value > waitingAnswerTimeList.sort((a, b) => a - b)[0]){
-      console.log(waitingAnswerTimeList.sort((a, b) => a - b))
       ElMessage.warning({
         grouping:true,
         message:"尚有试题未回答，无法快进"
@@ -398,16 +407,15 @@ watchEffect(() => {
       // 将跳帧时间恢复为上一次答题通过时间秒数 + 1s
       if (trueTestTimeList.length > 0) {
         seekTime.value = Number(trueTestTimeList[trueTestTimeList.length - 1]) + 1 + '-' + Math.random()
-        console.log(seekTime.value)
       }else {
         // 或者一题未答，则从1s开始
         seekTime.value = 1 + '-' + Math.random()
       }
-
     }
   }
 })
 
+// 监听页面关闭事件，关闭时，清空答题状态
 window.addEventListener('unload', function() {
   sessionStorage.removeItem('trueTestTime')
 });
@@ -558,7 +566,8 @@ onMounted(async () => {
                           </el-row><br/>
                           编辑视频测试题<br/>
                           <el-text size="small">暂停视频，可在暂停处增加视频测试题，最多4道</el-text><br/><br/>
-                          <el-button :disabled="videoTestLength === 0">预览</el-button>
+
+                          <el-button :disabled="videoTestLength === 0" @click="onPreview">{{ preViewText }}</el-button>
                           <el-button :disabled="videoTestLength === 0"
                                      @click="showGetVideoTestList = true">
                             试题列表&nbsp;{{ videoTestLength }} / 4
@@ -566,6 +575,7 @@ onMounted(async () => {
                           <el-button type="primary" color="#333"
                                      @click="showAddVideoTest = true"
                                      :disabled=" currentTime === 0">增加试题</el-button>
+
                         </el-card>
                       </el-col>
                     </el-row>
