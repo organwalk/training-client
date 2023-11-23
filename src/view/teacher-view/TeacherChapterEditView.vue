@@ -12,14 +12,14 @@ import {
 } from "@/api/resource-api";
 import {withLoading, withPreLoading} from "@/utils/functionUtil";
 import {ElMessage} from "element-plus";
-import {UploadFilled, Document, Delete, ArrowLeft} from "@element-plus/icons-vue";
+import {UploadFilled, Document, Delete, ArrowLeft, Close, Upload, View} from "@element-plus/icons-vue";
 import TcVideo from "@/components/video/tc-video.vue";
 import {getVideoTestList} from "@/api/plan-api";
-import editVideoTest from "@/assets/edit_video_test.png"
 import AddVideoTestDialog from "@/view/teacher-view/dialog/AddVideoTestDialog.vue";
 import GetVideoTestListDialog from "@/view/teacher-view/dialog/GetVideoTestListDialog.vue";
 import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
 import {videoURL} from "@/api/url-api";
+
 
 // 定义全局变量
 const preLoading = ref(false)
@@ -104,17 +104,17 @@ const videoUrl = ref()
 const loadingVideo = (rId) => {
   showUploadVideo.value = false
   if (rId) {
-    videoUrl.value = videoURL + rId
+    videoUrl.value = videoURL(rId)
   } else {
-    videoUrl.value = videoURL + resourceId
+    videoUrl.value = videoURL(resourceId)
   }
 }
 
 // 初始化和加载视频测试题
 const videoTest = reactive({
-  answerList: '',
-  pauseTimeList: '',
-  testTimeList: ''
+  answerList: [],
+  pauseTimeList: [],
+  testTimeList: []
 })
 const videoTestLength = ref(0)
 const testList = ref()
@@ -129,7 +129,7 @@ const loadingVideoTest = async () => {
     // 获取需要出现试题的时间列表
     videoTest.pauseTimeList = res.data.map(obj => ({id: obj.id, test_time: obj.test_time}))
     if (videoTest.pauseTimeList.length > 0) {
-      videoTest.testTimeList = videoTest.pauseTimeList.map(obj => (obj.test_time))
+      videoTest.testTimeList = videoTest.pauseTimeList.map(({test_time}) => (test_time))
     }
 
   }
@@ -175,8 +175,8 @@ const submitFile = withLoading(async () => {
   let file, fileName
   if (localFile.value) {
     // 存在本地文件时，提交本地文件
-    file = localFile.value.raw
-    fileName = localFile.value.name
+    file = localFile.value["raw"]
+    fileName = localFile.value["name"]
   } else {
     // 不存在本地文件，则必定为 markdown 编辑器内容
     file = new Blob([markdownText.value], {type: 'text/markdown'});
@@ -191,7 +191,7 @@ const submitFile = withLoading(async () => {
   // 上传教材资源文件
   await uploadResource(file, hash, size, totalSlice, fileName)
 
-  if(showProgress.value){
+  if (showProgress.value) {
     showProgress.value = false
   }
 }, loading)
@@ -230,7 +230,7 @@ const uploadResource = async (file, hash, size, totalSlice, fileName) => {
     } else if (res.msg.includes("教材上传成功") || res.msg.includes("教材资源上传成功")) {
       // 整份文件上传成功时，返回提示消息
       ElMessage.success(res.msg + "，章节：" + chapterName)
-      window.location.href = '/teacher'
+      resourceId ? location.reload() : window.location.href = '/teacher'
       break
     }
 
@@ -268,16 +268,21 @@ const showUploadMarkdownDialog = ref(false)
 const showProgress = ref(false)
 const localFile = ref('')
 const showUploadVideo = ref(true)
-if (isVideo){
-  showUploadVideo.value = false
-}
+watchEffect(async () => {
+  if (isVideo) {
+    showUploadVideo.value = false
+    loadingVideo(null)
+    await loadingVideoTest()
+  }
+})
+
 const uploadLocalFile = async (type) => {
   switch (type) {
     case 'markdown':
       showUploadMarkdownDialog.value = false
       break
     case 'video':
-      if (!nonReUpload.value){
+      if (!nonReUpload.value) {
         showUploadVideo.value = true
       }
       showProgress.value = true
@@ -307,15 +312,22 @@ const handRemove = () => {
 // 返回
 const back = () => {
   showChoose.value = !showChoose.value
+  let obj = {
+    lesson_id: lessonId,
+    chapter_id: chapterId,
+    chapter_name: chapterName,
+  }
+  if (resourceId) {
+    obj.resource_id = resourceId
+  }
   if (router.currentRoute.value.fullPath.includes('isVideo')) {
-    let obj = {
-      lesson_id: lessonId,
-      chapter_id: chapterId,
-      chapter_name: chapterName,
-    }
-    if (resourceId) {
-      obj.resource_id = resourceId
-    }
+    router.push({
+      path: '/teacher/edit',
+      query: obj,
+    }).then(() => {
+      window.location.reload();
+    })
+  }else {
     router.push({
       path: '/teacher/edit',
       query: obj,
@@ -328,7 +340,7 @@ const back = () => {
 
 // 删除已上传的教材资源
 const deleteFile = withLoading(async () => {
-  const res = await deleteResourceLesson(sessionStorage.getItem('uid'), lessonId, chapterId)
+  const res = await deleteResourceLesson(chapterId)
   if (res.code === 2002) {
     ElMessage.success(res.msg)
     window.location.href = '/teacher/edit?lesson_id=' + lessonId + '&chapter_id=' + chapterId + '&chapter_name=' + chapterName
@@ -342,6 +354,7 @@ const showAddVideoTest = ref(false)
 const closeAddVideoTest = async (des) => {
   showAddVideoTest.value = false
   if (des.split('-')[0] !== 'cancel') {
+    recoveryPreviewState()
     currentTime.value = 0
     await loadingVideoTest()
   }
@@ -352,19 +365,25 @@ const showGetVideoTestList = ref(false)
 const closeGetVideoTest = async (des) => {
   showGetVideoTestList.value = false
   if (des.split('-')[0] !== 'cancel') {
+    recoveryPreviewState()
     await loadingVideoTest()
   }
 }
 
 // 设置预览模式
 const isPreview = ref(false)
-const preViewText = ref('预览')
+const preViewText = ref('模拟学生视角')
 const onPreview = () => {
   isPreview.value = !isPreview.value
 
   isPreview.value ? ElMessage.info("正在模拟学生视角") : ElMessage.info("已停止模拟")
-  isPreview.value ? preViewText.value = '停止' : preViewText.value = '预览'
+  isPreview.value ? preViewText.value = '停止模拟' : preViewText.value = '模拟学生视角'
 
+  sessionStorage.removeItem('trueTestTime')
+}
+const recoveryPreviewState = () => {
+  isPreview.value = false
+  preViewText.value = '模拟学生视角'
   sessionStorage.removeItem('trueTestTime')
 }
 
@@ -380,7 +399,7 @@ const isExitFullScreen = ref(false)
 watchEffect(() => {
   if (isPreview.value && currentTime.value && videoTest.testTimeList.length > 0) {
     // 如果当前时间刚好与测试时间相同，则触发暂停时间
-    if (videoTest.testTimeList.includes(currentTime.value)) {
+    if (videoTest.testTimeList.indexOf(currentTime.value) !== -1) {
       question.value = testList.value.find(obj => obj.test_time === currentTime.value)
 
       // 启动暂停，停止播放
@@ -462,10 +481,29 @@ onMounted(async () => {
     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
       <!-- 上传教材类型选择 -->
       <el-card shadow="never" style="width: 50%;margin-top: 20px" v-show="!isVideo && showChoose"
-               v-loading="preLoading">
+               v-loading="preLoading" align="left">
+        <template #header>
+          <div class="card-header">
+            <el-row style="display: flex; align-items: center;">
+              <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+                <el-button @click="router.push('/teacher')" :disabled="loading" :icon="Close" style="border: none" circle/>
+              </el-col>
+              <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+                <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;编辑章节信息</h3>
+              </el-col>
+              <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+                <el-button type="primary"
+                           @click="nextStep"
+                           :disabled="radioVal === ''"
+                           color="#333333" round >
+                  下一步
+                </el-button>
+              </el-col>
+            </el-row>
+          </div>
+        </template><br/>
         <el-row>
-          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="left">
-            <h3>|&nbsp;&nbsp;&nbsp;编辑章节信息</h3><br/>
+          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
             <el-form :model="chapterObj">
               <el-form-item label="课程章节标题">
                 <el-input v-model="chapterObj.chapter_name" maxlength="15" show-word-limit type="textarea" rows="1"/>
@@ -477,18 +515,11 @@ onMounted(async () => {
                 </el-radio-group>
               </el-form-item>
               <el-form-item label="教材上传状态">
-                <el-tag :type="tagType">{{ tagTextMap[tagType] }}</el-tag>
+                <el-tag :type="tagType === 'success' ? 'success' : 'danger'">{{ tagTextMap[tagType] }}</el-tag>
               </el-form-item>
             </el-form>
           </el-col>
-        </el-row>
-        <el-divider/>
-        <el-button @click="router.push('/teacher')" :disabled="loading">取消</el-button>
-        <el-button type="primary"
-                   @click="nextStep"
-                   color="#333333">
-          下一步
-        </el-button>
+        </el-row><br/>
       </el-card>
 
       <!-- 编辑markdown文档 -->
@@ -533,27 +564,55 @@ onMounted(async () => {
       </div>
 
       <!-- 编辑视频教材 -->
-      <div v-show="!showChoose && (radioVal === '讲解视频录像' || isVideo)">
+      <div v-show="!showChoose && radioVal === '讲解视频录像' || isVideo">
         <el-row>
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="left">
             <el-card shadow="never" style="border-top: none;border-bottom:none;overflow-y: auto" v-loading="loading">
-              <template #header>
-                <tc-container-full-row>
-                  <el-row>
-                    <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" align="left">
-                      <h3 style="margin-top: 0;margin-bottom: 0;user-select: none">|&nbsp;&nbsp;{{ chapterName }}</h3>
-                    </el-col>
-                  </el-row>
-                </tc-container-full-row>
-              </template>
               <el-row>
-                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4">
-                </el-col>
+                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4" />
                 <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
                   <el-card shadow="never">
+<!--                    头部-->
+                    <template #header>
+                      <div class="card-header">
+                        <el-row v-if="!showUploadVideo" style="display: flex;align-items: center">
+                          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1" align="left">
+                            <el-button @click="back" :disabled="showProgress" :icon="ArrowLeft" style="border: none" circle/>
+                          </el-col>
+                          <el-col :xs="13" :sm="13" :md="13" :lg="13" :xl="13" align="left">
+                            <h3 style="margin-top: 0;margin-bottom: 0">编辑视频测试题</h3>
+                          </el-col>
+                          <el-col :xs="10" :sm="10" :md="10" :lg="10" :xl="10" style="text-align: right">
+                            <el-button @click="deleteFile"
+                                       text
+                                       type="danger" :disabled="showProgress" round>删除视频
+                            </el-button>
+                            <el-button type="primary"
+                                       :icon="Upload"
+                                       @click="uploadLocalFile('video')"
+                                       :disabled="showProgress" round>更换视频源
+                            </el-button>
+                          </el-col>
+                        </el-row>
+                        <el-row v-if="showUploadVideo" style="display: flex;align-items: center">
+                          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1" align="left">
+                            <el-button @click="back" :disabled="showProgress" :icon="ArrowLeft" style="border: none" circle/>
+                          </el-col>
+                          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17" align="left">
+                            <h3 style="margin-top: 0;margin-bottom: 0">上传视频教材</h3>
+                          </el-col>
+                          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right">
+                            <el-button @click="uploadLocalFile('video')" type="primary"
+                                       :icon="Upload" :disabled="localFile === '' || showProgress">确认上传
+                            </el-button>
+                          </el-col>
+                        </el-row>
+                      </div>
+                    </template>
+<!--                    上传视频-->
                     <el-upload
                         drag
-                        limit="2"
+                        :limit="2"
                         :auto-upload="false"
                         :on-change="handChange"
                         :on-remove="handRemove"
@@ -572,76 +631,44 @@ onMounted(async () => {
                         </div>
                       </template>
                     </el-upload>
-                    <br/>
                     <div v-if="showProgress">
+                      <br/>
                       <el-progress style="width: 100%;height: auto"
                                    :percentage="uploadProgress"
                                    :color="uploadColors"/>
                       <br/>
                     </div>
-
                     <!-- 视频 -->
-                    <el-row :gutter="15" v-if="!showUploadVideo">
-                      <el-col :xs="14" :sm="14" :md="14" :lg="14" :xl="14" align="center">
+                    <el-row v-if="!showUploadVideo">
+                      <el-col :xs="24" :sm="14" :md="14" :lg="24" :xl="14" align="center">
                         <tc-video :video-url="videoUrl"
                                   :pause-time-list="videoTest.pauseTimeList"
                                   :is-pause="isPauseVideo"
                                   :is-play="isPlay"
                                   :is-exit-full-screen="isExitFullScreen"
                                   :seek-time="seekTime"
-                                  width="500" height="300"
+                                  :width="640" :height="360"
                                   @get-current-time="(time) => { currentTime = time}"
                                   @get-seeking-time="(time) => { seekingTime = time}"
-                                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"/>
+                                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"/><br/>
                       </el-col>
                       <!-- 视频测试题 -->
-                      <el-col :xs="6" :sm="6" :md="6" :lg="10" :xl="6">
-                        <el-card shadow="hover">
-                          <el-row>
-                            <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
-                              <img :src="editVideoTest" style="width: 60%;" alt="404">
-                            </el-col>
-                          </el-row>
-                          <br/>
-                          编辑视频测试题<br/>
-                          <el-text size="small">暂停视频，可在暂停处增加视频测试题，最多4道</el-text>
-                          <br/><br/>
-
-                          <el-button :disabled="videoTestLength === 0" @click="onPreview">{{ preViewText }}</el-button>
-                          <el-button :disabled="videoTestLength === 0"
-                                     @click="showGetVideoTestList = true">
-                            试题列表&nbsp;{{ videoTestLength }} / 4
-                          </el-button>
-                          <el-button type="primary" color="#333"
-                                     @click="showAddVideoTest = true"
-                                     :disabled=" currentTime === 0 || videoTestLength === 4">增加试题
-                          </el-button>
-                        </el-card>
-                      </el-col>
-                    </el-row>
-                    <el-divider/>
-                    <el-row v-if="!showUploadVideo">
                       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
-                        <el-button @click="back" :disabled="showProgress">返回</el-button>
-                        <el-button type="primary"
-                                   @click="uploadLocalFile('video')"
-                                   :disabled="showProgress">重新上传</el-button>
-                        <el-button @click="deleteFile"
-                                   type="danger" :disabled="showProgress">删除</el-button>
-                      </el-col>
-                    </el-row>
-                    <el-row v-if="showUploadVideo">
-                      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
-                        <el-button @click="back" :disabled="showProgress">返回</el-button>
-                        <el-button @click="uploadLocalFile('video')" type="primary"
-                                   :disabled="localFile === '' || showProgress">上传
+                        <el-button :disabled="videoTestLength === 0"
+                                   :icon="View" @click="onPreview" size="large" round v-btn>{{ preViewText }}</el-button>
+                        <el-button :disabled="videoTestLength === 0"
+                                   @click="showGetVideoTestList = true" size="large" round v-btn>
+                          当前试题列表&nbsp;{{ videoTestLength }} / 4
+                        </el-button>
+                        <el-button type="primary" color="#333"
+                                   @click="showAddVideoTest = true"
+                                   :disabled=" currentTime === 0 || videoTestLength === 4" size="large" round v-btn>增加试题
                         </el-button>
                       </el-col>
-                    </el-row>
+                    </el-row><br/>
                   </el-card>
                 </el-col>
-                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4">
-                </el-col>
+                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4" />
               </el-row>
             </el-card>
           </el-col>
@@ -662,7 +689,7 @@ onMounted(async () => {
   >
     <el-upload
         drag
-        limit="2"
+        :limit="2"
         :auto-upload="false"
         :on-change="handChange"
         :on-remove="handRemove"
@@ -683,9 +710,8 @@ onMounted(async () => {
     <el-divider/>
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
-        <el-button @click="showUploadMarkdownDialog = false" :disabled="isSubmit">取消</el-button>
+        <el-button @click="showUploadMarkdownDialog = false">取消</el-button>
         <el-button @click="uploadLocalFile('markdown')" type="primary"
-                   :loading="isSubmit"
                    :disabled="localFile === ''">提交
         </el-button>
       </el-col>
@@ -694,7 +720,7 @@ onMounted(async () => {
 
   <AddVideoTestDialog :show-add-video-test-dialog="showAddVideoTest"
                       :current-time=" currentTime "
-                      :resource-id="resourceId"
+                      :resource-id="Number(resourceId)"
                       @close-dialog="closeAddVideoTest"/>
 
   <GetVideoTestListDialog :show-get-video-test-dialog="showGetVideoTestList"
