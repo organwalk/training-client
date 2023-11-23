@@ -10,7 +10,7 @@ import {ElMessage} from "element-plus";
 const loading = ref(false)
 const props = defineProps({
   showDeleteLessonDialog:Boolean,
-  lessonId:String,
+  lessonId:Number,
   lessonName:String
 })
 const emit = defineEmits(['closeDeleteLessonDialog'])

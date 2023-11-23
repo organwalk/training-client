@@ -21,10 +21,11 @@ const request = (config) => {
                         type:'error'
                     })
                     setTimeout(()=>{
+                        sessionStorage.clear()
                         window.location.href = '/login'
                     })
                 }else {
-                    ElMessage.error({
+                    ElMessage.warning({
                         message:response.data.msg,
                         grouping:true,
                         type:'error'
@@ -41,7 +42,7 @@ const request = (config) => {
             return response.data;
         },
         error => {
-            console.log(error)
+            console.error(error)
             if (error.code){
                 ElMessage.error({
                     message:"内部服务错误",

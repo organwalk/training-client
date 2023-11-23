@@ -11,7 +11,7 @@ const loading = ref(false)
 const showAddChapterDialog = ref(false)
 const props = defineProps({
   showAddChapterDialog:Boolean,
-  lessonId:String
+  lessonId:Number
 })
 const emit = defineEmits(['closeAddChapterDialog'])
 watchEffect(() => {

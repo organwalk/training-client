@@ -99,7 +99,7 @@ const type = ref('info')
 const getLessonState = async () => {
   const res = await getLessonDetail(props.lessonObj.lesson_id)
   if (res.code === 2002){
-    if (res.data.lesson_state === 0){
+    if (res.data['lesson_state'] === 0){
       nowState.value = "未发布"
     }else {
       nowState.value = "已发布"
@@ -135,7 +135,7 @@ const isReverse = ref(1)
 
             <!-- 课程名 -->
             <el-col :xs="6" :sm="6" :md="6" :lg="3" :xl="6">
-              <el-tag :type="type">{{ nowState }}</el-tag>
+              <el-tag :type="type === 'success' ? 'success':'info'">{{ nowState }}</el-tag>
             </el-col>
             <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
               <h3 style="margin-top: 0;margin-bottom: 0">{{ props.lessonObj.lesson_name }}</h3>
@@ -149,12 +149,13 @@ const isReverse = ref(1)
                         id="search-lesson"/>
 
               <el-popover
+                  id="more-operate"
                   placement="bottom"
                   :width="350"
                   trigger="click"
                   :show-arrow="false"
-                  hide-after="0"
-                  offset="-5"
+                  :hide-after="0"
+                  :offset="-5"
                   popper-class="operate-pop"
               >
                 <el-card :body-style="{padding:0}">
@@ -202,7 +203,7 @@ const isReverse = ref(1)
         </el-row><br/>
 
         <!-- 章节列表 -->
-        <TeacherChapterList :lesson-id="props.lessonObj.lesson_id"
+        <TeacherChapterList :lesson-id="lessonObj['lesson_id']"
                             :is-refresh="isRefresh"
                             :is-reverse="isReverse"
                             :keyword="keyword"/>
@@ -218,19 +219,20 @@ const isReverse = ref(1)
   </el-card>
 
   <!-- 对话框区 -->
-  <UpdateLessonDialog :lesson-id="props.lessonObj.lesson_id"
+  <UpdateLessonDialog :lesson-id="lessonObj['lesson_id']"
                       :show-update-lesson-dialog="showUpdateLessonDialog"
                       @close-update-lesson-dialog="closeUpdateDialog"/>
-  <DeleteLessonDialog :lesson-id="props.lessonObj.lesson_id"
-                      :lesson-name="props.lessonObj.lesson_name"
+  <DeleteLessonDialog :lesson-id="lessonObj['lesson_id']"
+                      :lesson-name="lessonObj['lesson_name']"
                       :show-delete-lesson-dialog="showDeleteLessonDialog"
                       @close-delete-lesson-dialog="closeDeleteDialog"/>
-  <AddChapterDialog :lesson-id="props.lessonObj.lesson_id"
+  <AddChapterDialog :lesson-id="lessonObj['lesson_id']"
                     :show-add-chapter-dialog = "showAddChapterDialog"
                     @close-add-chapter-dialog="closeAddChapterDialog"/>
 </template>
 
 <style>
+/*noinspection CssUnusedSymbol*/
 .el-popover.operate-pop {
   background: transparent;
   border: none;

@@ -115,7 +115,7 @@ export function getResourceLessonRid(lessonId){
 
 // 根据课程教材ID获取教材
 export function getResourceLesson(resourceId){
-    return http.get('/resource/v1/lesson/load/' + resourceId)
+    return http.get('/resource/v1/lesson/load/' + resourceId + '/' + String(Math.random()).split('.')[1])
 }
 
 // 重传课程教材
@@ -123,12 +123,12 @@ export function reUploadLessonResource(obj){
     return http.formDataPut('/resource/v2/lesson', getResourceLessonObj(obj))
 }
 
-// 获取指定教材资源ID
-export function getResourceLessonId(lessonId, chapterId){
-    return http.get('/resource/v2/lesson/id/' + lessonId + '/' + chapterId)
+// 删除指定课程章节教材文件
+export function deleteResourceLesson(chapterId){
+    return http.delete('/resource/v2/lesson/chapter/' + chapterId)
 }
 
-// 删除指定课程章节教材文件
-export function deleteResourceLesson(teacherId, lessonId, chapterId){
-    return http.delete('/resource/v2/lesson/' + teacherId + '/' + lessonId + '/' + chapterId)
+// 获取指定教材资源类型
+export function getResourceLessonType(resourceId){
+    return http.get('/resource/v2/lesson/type/' + resourceId)
 }

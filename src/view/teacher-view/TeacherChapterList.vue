@@ -13,7 +13,7 @@ import {getResourceLessonRid} from "@/api/resource-api";
 // 定义全局变量
 const loading = ref(false)
 const props = defineProps({
-  lessonId:String,
+  lessonId:Number,
   isRefresh:Boolean,
   keyword:String,
   isReverse:Number
@@ -39,7 +39,7 @@ const loadingResourceLessonList = async (chapterList) => {
   if (res.code === 2002){
     const process_result = chapterList.map(c_item => {
       const updatedItem = { ...c_item }; // 创建一个新对象以避免直接修改原始数据
-      const foundRItem = res.data.find(r_item => r_item.chapterId === c_item.id);
+      const foundRItem = res.data.find(r_item => r_item['chapterId'] === c_item.id);
       if (foundRItem) {
         updatedItem.r_id = foundRItem.id;
         updatedItem.up_datetime = foundRItem.up_datetime;
@@ -87,7 +87,7 @@ watchEffect(async () => {
 watchEffect(async () => {
   if (keyword.value){
     dataList.value = originDataList.value.filter(item => {
-      return item.chapterName.toLowerCase().includes(String(keyword.value).toLowerCase());
+      return String(item['chapterName']).toLowerCase().includes(String(keyword.value).toLowerCase());
     })
   }else if (keyword.value === ''){
     dataList.value = originDataList.value
@@ -135,11 +135,11 @@ const editChapter = (chapterId, chapterName, resourceId) => {
                  style="border: none;background-color: #f6f8fa;">
           <el-row>
             <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16" style="display: flex;align-items: center">
-              <el-text style="font-weight: bold;">{{row.chapterName}}</el-text>
+              <el-text style="font-weight: bold;">{{row['chapterName']}}</el-text>
             </el-col>
             <el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8" align="right">
               <el-button :icon="Edit" style="background-color: transparent"
-                         @click="editChapter(row.id, row.chapterName, row.r_id)">Edit</el-button>
+                         @click="editChapter(row.id, row['chapterName'], row.r_id)">Edit</el-button>
               <el-button :icon="Delete" style="background-color: transparent" @click="deleteChapter(row.id)"/>
             </el-col>
           </el-row>

@@ -11,7 +11,7 @@ const loading = ref(false)
 const showUpdateLessonDialog = ref(false)
 const props = defineProps({
   showUpdateLessonDialog: Boolean,
-  lessonId: String
+  lessonId: Number
 })
 const emit = defineEmits(['closeUpdateLessonDialog'])
 watchEffect(() => {

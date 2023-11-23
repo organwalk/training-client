@@ -87,10 +87,9 @@ watchEffect(() => {
 })
 watchEffect(() => {
   if (props.seekTime){
-    player.seek(props.seekTime.split('-')[0])
+    player.seek(String(props.seekTime).split('-')[0])
   }
 })
-
 
 
 

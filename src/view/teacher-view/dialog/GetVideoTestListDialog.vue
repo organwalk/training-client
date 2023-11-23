@@ -6,6 +6,7 @@ import {withButtonLoading} from "@/utils/functionUtil";
 import {deleteVideoTest, editVideoTest} from "@/api/plan-api";
 import {ElMessage} from "element-plus";
 import {useRouter} from "vue-router";
+import {Close, ArrowLeft} from "@element-plus/icons-vue";
 
 
 const showGetVideoTestDialog = ref(false)
@@ -116,17 +117,53 @@ const deleteTest = withButtonLoading(async () => {
 <template>
   <el-dialog v-model="showGetVideoTestDialog"
              v-if="showGetVideoTestDialog"
-             style="margin-top: 20px;"
+             style="margin-top: 20px;border-radius: 15px"
              top="0"
              width="45%"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
              :show-close="false"
-             title="视频测试题列表"
              :lock-scroll="false"
              destroy-on-close
   >
-    <el-card style="margin-bottom: 10px" shadow="never" v-if="testList && testList.length > testIndex">
+    <template #header>
+      <div class="card-header" v-show="showTest">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="closeDialog('cancel')"
+                       :disabled="buttonLoading" :icon="Close" style="border: none" circle/>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;试题列表</h3>
+          </el-col>
+          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17" style="text-align: right;">
+            <el-button @click="deleteTest" type="danger" :loading="buttonLoading" round>删除试题</el-button>
+            <el-button @click="testIndex--"
+                       v-show="testIndex !==  0"
+                       :disabled="buttonLoading" round v-btn>上一题</el-button>
+            <el-button @click="testIndex++"
+                       v-show="testList.length !== testIndex + 1"
+                       :disabled="buttonLoading" round v-btn>下一题</el-button>
+            <el-button @click="edit" type="primary" color="#333"
+                       :disabled="buttonLoading" round>编辑试题</el-button>
+          </el-col>
+        </el-row>
+      </div>
+      <div class="card-header" v-show="!showTest">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="showTest = true" :disabled="buttonLoading" :icon="ArrowLeft" circle style="border: none"/>
+          </el-col>
+          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;编辑试题</h3>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+            <el-button @click="submit" type="primary" color="#333" :loading="buttonLoading" round>提交编辑</el-button>
+          </el-col>
+        </el-row>
+      </div>
+    </template>
+    <el-card style="margin-bottom: 10px;border-radius: 10px" shadow="never" v-if="testList && testList.length > testIndex">
       <tc-container-full-row>
         <div v-show="showTest">
           <el-tag type="info">出现时间: {{ secondsToMinutesSeconds(testList[testIndex].test_time) }}</el-tag><br/><br/>
@@ -174,25 +211,6 @@ const deleteTest = withButtonLoading(async () => {
         </div>
       </tc-container-full-row>
     </el-card>
-    <template #footer>
-      <span class="dialog-footer" v-show="showTest">
-        <el-button @click="deleteTest" type="danger" :loading="buttonLoading">删除</el-button>
-        <el-button @click="closeDialog('cancel')"
-                   :disabled="buttonLoading">关闭</el-button>
-        <el-button @click="testIndex--"
-                   v-show="testIndex !==  0"
-                   :disabled="buttonLoading">上一题</el-button>
-        <el-button @click="testIndex++"
-                   v-show="testList.length !== testIndex + 1"
-                   :disabled="buttonLoading">下一题</el-button>
-        <el-button @click="edit" type="primary" color="#333"
-                   :disabled="buttonLoading">编辑</el-button>
-      </span>
-      <span class="dialog-footer" v-show="!showTest">
-        <el-button @click="showTest = true" :disabled="buttonLoading">取消</el-button>
-        <el-button @click="submit" type="primary" color="#333" :loading="buttonLoading">提交</el-button>
-      </span>
-    </template>
   </el-dialog>
 </template>
 

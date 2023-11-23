@@ -30,7 +30,7 @@ const close = (des) => {
 const answerBox = ref([])
 const answerStr = ref()
 watchEffect(() => {
-  let answerList = answerBox.value.map(item => (item.split('.')[0])).sort()
+  let answerList = answerBox.value.map(item => (String(item).split('.')[0])).sort()
   if (answerList.length > 1){
     answerStr.value = answerList.join(',')
   }else {
@@ -54,33 +54,35 @@ const submit = () => {
              style="margin-top: 50px;border-radius: 15px"
              top="0"
              width="45%"
-             title="Question"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
              :show-close="false"
              :lock-scroll="false"
              destroy-on-close
   >
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="18">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;正确回答试题以继续观看</h3>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+            <el-button @click="submit" round type="primary" color="#333">提交答案</el-button>
+          </el-col>
+        </el-row>
+      </div>
+    </template>
     <el-card style="border-radius: 10px" shadow="never">
       <tc-container-full-row>
-        <h3 style="margin-top: 0;margin-bottom: 0">（{{ answerType }}）{{ testObj.test_title }}</h3><br/>
+        <h3 style="margin-top: 0;margin-bottom: 0">（{{ answerType }}）{{ testObj['test_title'] }}</h3><br/>
         <el-checkbox-group v-model="answerBox">
-          <el-checkbox :label="'A. ' + testObj.test_options_a"/>
-          <br/>
-          <el-checkbox :label="'B. ' + testObj.test_options_b"/>
-          <br/>
-          <el-checkbox :label="'C. ' + testObj.test_options_c"/>
-          <br/>
-          <el-checkbox :label="'D. ' + testObj.test_options_d"/>
-          <br/>
+          <el-checkbox :label="'A. ' + testObj['test_options_a']"/><br/>
+          <el-checkbox :label="'B. ' + testObj['test_options_b']"/><br/>
+          <el-checkbox :label="'C. ' + testObj['test_options_c']"/><br/>
+          <el-checkbox :label="'D. ' + testObj['test_options_d']"/><br/>
         </el-checkbox-group>
       </tc-container-full-row>
     </el-card>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="submit" round type="primary" color="#333">提交</el-button>
-      </span>
-    </template>
   </el-dialog>
 </template>
 

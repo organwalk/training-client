@@ -28,10 +28,10 @@ const getPlanIdList = withLoading(async (teacherId) => {
     planIdList.value = selectPlanListSwitch(res.data)
     planId.value = planIdList.value.find(item => {
       // 选择 正在进行 状态的第一个值为默认值
-      if (item.label === "正在进行") {
+      if (item['label'] === "正在进行") {
         return item
       }
-    }).options[0].value
+    })['options'][0].value
   } else {
     // 当无法获取培训计划列表时...
   }
@@ -45,17 +45,17 @@ const getPlanDetailHTML = async (id) => {
     planDetailHTML.value.set(id, '······')
     // 从原始计划列表中获取与聚焦事件相对应的对象
     let obj = originPlanList.value.find(item => {
-      if (item.id === Number(id)) {
+      if (item['id'] === Number(id)) {
         return item
       }
     })
     // 获取部门名称、渲染HTML模板并缓存入map结构中
-    const res = await getDeptInfo(obj.dept_id)
+    const res = await getDeptInfo(obj['dept_id'])
     obj.deptName = res.data.deptName
-    const html = `<strong>培训目的：</strong><p>${obj.training_purpose}</p><br/><br/>` +
-        `<strong>开始时间：</strong>${obj.training_start_time}<br/>` +
-        `<strong>结束时间：</strong>${obj.training_end_time}<br/>` +
-        `<strong>培训部门：</strong>${obj.deptName}`
+    const html = `<strong>培训目的：</strong><p>${obj['training_purpose']}</p><br/><br/>` +
+        `<strong>开始时间：</strong>${obj['training_start_time']}<br/>` +
+        `<strong>结束时间：</strong>${obj['training_end_time']}<br/>` +
+        `<strong>培训部门：</strong>${obj['deptName']}`
     planDetailHTML.value.set(id, html)
   }
 }
@@ -186,7 +186,7 @@ onBeforeMount(async () => {
                       effect="light"
                       placement="right-start"
                       :hide-after="0"
-                      offset="50"
+                      :offset="50"
                       :show-arrow="false"
                   >
                     <template #content>
@@ -255,19 +255,20 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-input__wrapper{
   box-shadow: none;
   padding: 0
 }
-
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-textarea__inner {
   resize: none;
 }
-
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-select:hover:not(.el-select--disabled) .el-input__wrapper {
   box-shadow: none;
 }
-
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-select {
   --el-select-border-color-hover: none;
   --el-select-input-focus-border-color: none;
