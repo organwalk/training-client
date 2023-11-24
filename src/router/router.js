@@ -42,6 +42,18 @@ const routes = [
                 path:'edit',
                 name: 'teacherChapterEditView',
                 component:() => import('@/view/teacher-view/TeacherChapterEditView.vue')
+            },
+            {
+                path: 'exam',
+                name:'teacherExamManage',
+                component:() => import('@/view/teacher-view/exam/TeacherExamMange.vue'),
+                children:[
+                    {
+                        path:'report',
+                        name:'teacherExamReport',
+                        component:() => import('@/view/teacher-view/report/TeacherExamReportMange.vue')
+                    }
+                ]
             }
         ]
     }

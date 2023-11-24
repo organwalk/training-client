@@ -4,6 +4,7 @@ import {objectsIsNull} from "@/utils/dataUtil";
 import {addLessonByTeacher} from "@/api/plan-api";
 import {withLoading} from "@/utils/functionUtil";
 import {ElMessage} from "element-plus";
+import {Close} from "@element-plus/icons-vue";
 
 
 // 定义全局变量
@@ -49,31 +50,45 @@ const closeDialog = (des) => {
   <el-dialog v-model="showAddLessonDialog"
              v-if="showAddLessonDialog"
              width="45%"
+             style="border-radius: 15px"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
              :show-close="false"
              id="add-lesson"
-             title="添加新课程"
   >
-    <el-form :model="lessonObj" v-loading="loading">
-      <el-form-item label="课程名称">
-        <el-input v-model="lessonObj.lesson_name" maxlength="15" show-word-limit/>
-      </el-form-item>
-      <el-form-item label="课程描述">
-        <el-input type="textarea" v-model="lessonObj.lesson_des"
-                  rows="5"
-                  maxlength="150"
-                  show-word-limit/>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="closeDialog('cancel')" :disabled="loading">取消</el-button>
-        <el-button type="primary" @click="addLesson" :disabled="objectsIsNull(lessonObj) || loading" color="#333333">
-          确认
-        </el-button>
-      </span>
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="closeDialog('cancel')"
+                       style="border: none"
+                       :disabled="loading" :icon="Close" circle/>
+          </el-col>
+          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;添加新课程</h3>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+            <el-button type="primary" @click="addLesson" round
+                       :disabled="objectsIsNull(lessonObj) || loading" color="#333333">
+              确认添加
+            </el-button>
+          </el-col>
+        </el-row>
+      </div>
     </template>
+    <el-card shadow="never" style="margin-top: -10px;border-radius: 10px">
+      <el-form :model="lessonObj" v-loading="loading" label-position="top">
+        <el-form-item label="课程名称">
+          <el-input v-model="lessonObj.lesson_name" maxlength="15" show-word-limit/>
+        </el-form-item>
+        <el-form-item label="课程描述">
+          <el-input type="textarea" v-model="lessonObj.lesson_des"
+                    rows="5"
+                    maxlength="150"
+                    show-word-limit/>
+        </el-form-item>
+      </el-form>
+    </el-card>
   </el-dialog>
 </template>
 

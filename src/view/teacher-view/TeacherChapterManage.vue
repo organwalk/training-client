@@ -147,7 +147,6 @@ const isReverse = ref(1)
                         placeholder="搜索指定章节"
                         style="width: 40%"
                         id="search-lesson"/>
-
               <el-popover
                   id="more-operate"
                   placement="bottom"
