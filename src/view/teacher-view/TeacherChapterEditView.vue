@@ -10,11 +10,11 @@ import {
   reUploadLessonResource,
   uploadLessonResource
 } from "@/api/resource-api";
-import {withLoading, withPreLoading} from "@/utils/functionUtil";
+import {withBoolean, withLoading, withPreLoading} from "@/utils/functionUtil";
 import {ElMessage} from "element-plus";
 import {UploadFilled, Document, Delete, ArrowLeft, Close, Upload, View} from "@element-plus/icons-vue";
 import TcVideo from "@/components/video/tc-video.vue";
-import {getVideoTestList} from "@/api/plan-api";
+import {getVideoTestList, updateChapterName} from "@/api/plan-api";
 import AddVideoTestDialog from "@/view/teacher-view/dialog/AddVideoTestDialog.vue";
 import GetVideoTestListDialog from "@/view/teacher-view/dialog/GetVideoTestListDialog.vue";
 import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
@@ -59,7 +59,7 @@ const setResourceLessonState = async () => {
   }
 }
 
-// 预加载教材
+// 设置教材资源类别
 const setResourceType = withPreLoading(async () => {
   const res = await getResourceLessonType(resourceId)
   if (res.code === 2002) {
@@ -78,6 +78,16 @@ const disableResourceTypeRadio = (contentType) => {
     radioVal.value = '讲解视频录像'
   }
 }
+
+
+// 直接修改章节名
+const editChapterName = withBoolean(async () => {
+  const res = await updateChapterName(chapterId, chapterObj)
+  if (res.code === 2002) {
+    ElMessage.success(res.msg)
+    window.location.href = '/teacher'
+  }
+}, preLoading)
 
 
 // 定义 下一步 事件
@@ -327,7 +337,7 @@ const back = () => {
     }).then(() => {
       window.location.reload();
     })
-  }else {
+  } else {
     router.push({
       path: '/teacher/edit',
       query: obj,
@@ -486,22 +496,30 @@ onMounted(async () => {
           <div class="card-header">
             <el-row style="display: flex; align-items: center;">
               <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
-                <el-button @click="router.push('/teacher')" :disabled="loading" :icon="Close" style="border: none" circle/>
+                <el-button @click="router.push('/teacher')" :disabled="loading" :icon="Close" style="border: none"
+                           circle/>
               </el-col>
-              <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+              <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
                 <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;编辑章节信息</h3>
               </el-col>
-              <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+              <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17" style="text-align: right;">
+                <el-button type="primary"
+                           @click="editChapterName"
+                           :disabled="chapterObj.chapter_name === chapterName"
+                           text round>
+                  确认编辑章节名称
+                </el-button>
                 <el-button type="primary"
                            @click="nextStep"
                            :disabled="radioVal === ''"
-                           color="#333333" round >
+                           color="#333333" round>
                   下一步
                 </el-button>
               </el-col>
             </el-row>
           </div>
-        </template><br/>
+        </template>
+        <br/>
         <el-row>
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
             <el-form :model="chapterObj">
@@ -519,7 +537,8 @@ onMounted(async () => {
               </el-form-item>
             </el-form>
           </el-col>
-        </el-row><br/>
+        </el-row>
+        <br/>
       </el-card>
 
       <!-- 编辑markdown文档 -->
@@ -569,15 +588,16 @@ onMounted(async () => {
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="left">
             <el-card shadow="never" style="border-top: none;border-bottom:none;overflow-y: auto" v-loading="loading">
               <el-row>
-                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4" />
+                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
                 <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
                   <el-card shadow="never">
-<!--                    头部-->
+                    <!--                    头部-->
                     <template #header>
                       <div class="card-header">
                         <el-row v-if="!showUploadVideo" style="display: flex;align-items: center">
                           <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1" align="left">
-                            <el-button @click="back" :disabled="showProgress" :icon="ArrowLeft" style="border: none" circle/>
+                            <el-button @click="back" :disabled="showProgress" :icon="ArrowLeft" style="border: none"
+                                       circle/>
                           </el-col>
                           <el-col :xs="13" :sm="13" :md="13" :lg="13" :xl="13" align="left">
                             <h3 style="margin-top: 0;margin-bottom: 0">编辑视频测试题</h3>
@@ -596,7 +616,8 @@ onMounted(async () => {
                         </el-row>
                         <el-row v-if="showUploadVideo" style="display: flex;align-items: center">
                           <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1" align="left">
-                            <el-button @click="back" :disabled="showProgress" :icon="ArrowLeft" style="border: none" circle/>
+                            <el-button @click="back" :disabled="showProgress" :icon="ArrowLeft" style="border: none"
+                                       circle/>
                           </el-col>
                           <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17" align="left">
                             <h3 style="margin-top: 0;margin-bottom: 0">上传视频教材</h3>
@@ -609,7 +630,7 @@ onMounted(async () => {
                         </el-row>
                       </div>
                     </template>
-<!--                    上传视频-->
+                    <!--                    上传视频-->
                     <el-upload
                         drag
                         :limit="2"
@@ -650,12 +671,14 @@ onMounted(async () => {
                                   :width="640" :height="360"
                                   @get-current-time="(time) => { currentTime = time}"
                                   @get-seeking-time="(time) => { seekingTime = time}"
-                                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"/><br/>
+                                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"/>
+                        <br/>
                       </el-col>
                       <!-- 视频测试题 -->
                       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
                         <el-button :disabled="videoTestLength === 0"
-                                   :icon="View" @click="onPreview" size="large" round v-btn>{{ preViewText }}</el-button>
+                                   :icon="View" @click="onPreview" size="large" round v-btn>{{ preViewText }}
+                        </el-button>
                         <el-button :disabled="videoTestLength === 0"
                                    @click="showGetVideoTestList = true" size="large" round v-btn>
                           当前试题列表&nbsp;{{ videoTestLength }} / 4
@@ -665,10 +688,11 @@ onMounted(async () => {
                                    :disabled=" currentTime === 0 || videoTestLength === 4" size="large" round v-btn>增加试题
                         </el-button>
                       </el-col>
-                    </el-row><br/>
+                    </el-row>
+                    <br/>
                   </el-card>
                 </el-col>
-                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4" />
+                <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
               </el-row>
             </el-card>
           </el-col>
@@ -680,42 +704,52 @@ onMounted(async () => {
   <el-dialog v-model="showUploadMarkdownDialog"
              v-if="showUploadMarkdownDialog"
              width="45%"
+             style="border-radius: 15px"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
              :show-close="false"
-             title="上传本地文档"
              :lock-scroll="false"
              destroy-on-close
   >
-    <el-upload
-        drag
-        :limit="2"
-        :auto-upload="false"
-        :on-change="handChange"
-        :on-remove="handRemove"
-    >
-      <el-icon class="el-icon--upload">
-        <upload-filled/>
-      </el-icon>
-      <div class="el-upload__text">
-        拖动文档至此处 <em>点击上传</em>
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="showUploadMarkdownDialog = false" :icon="Close" style="border: none" circle/>
+          </el-col>
+          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;上传本地Markdown文档</h3>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+            <el-button @click="uploadLocalFile('markdown')"
+                       type="primary" color="#333" round
+                       :disabled="localFile === ''">确认上传
+            </el-button>
+          </el-col>
+        </el-row>
       </div>
-      <template #tip>
-        <div class="el-upload__tip">
-          only supports uploading one <strong>markdown</strong> document at a time
+    </template>
+    <el-card shadow="never" style="border-radius: 10px;margin-top: -15px;">
+      <el-upload
+          drag
+          :limit="2"
+          :auto-upload="false"
+          :on-change="handChange"
+          :on-remove="handRemove"
+      >
+        <el-icon class="el-icon--upload">
+          <upload-filled/>
+        </el-icon>
+        <div class="el-upload__text">
+          拖动文档至此处 <em>点击上传</em>
         </div>
-      </template>
-    </el-upload>
-    <br/>
-    <el-divider/>
-    <el-row>
-      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" align="center">
-        <el-button @click="showUploadMarkdownDialog = false">取消</el-button>
-        <el-button @click="uploadLocalFile('markdown')" type="primary"
-                   :disabled="localFile === ''">提交
-        </el-button>
-      </el-col>
-    </el-row>
+        <template #tip>
+          <div class="el-upload__tip">
+            only supports uploading one <strong>markdown</strong> document at a time
+          </div>
+        </template>
+      </el-upload>
+    </el-card>
   </el-dialog>
 
   <AddVideoTestDialog :show-add-video-test-dialog="showAddVideoTest"

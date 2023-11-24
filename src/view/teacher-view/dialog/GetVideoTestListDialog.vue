@@ -117,8 +117,7 @@ const deleteTest = withButtonLoading(async () => {
 <template>
   <el-dialog v-model="showGetVideoTestDialog"
              v-if="showGetVideoTestDialog"
-             style="margin-top: 20px;border-radius: 15px"
-             top="0"
+             style="border-radius: 15px"
              width="45%"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
