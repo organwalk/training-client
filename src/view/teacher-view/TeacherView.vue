@@ -147,6 +147,14 @@ const refreshData = async (state) => {
 const router = useRouter()
 
 
+const examAndReport = () => {
+  router.push({
+    path:'/teacher/exam',
+    query:{lessonId:activeLessonId.value}
+  })
+}
+
+
 // 生命周期钩子
 onBeforeMount(async () => {
   // 加载培训计划选择器
@@ -167,10 +175,7 @@ onBeforeMount(async () => {
           </div>
         </el-col>
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12" align="right">
-          <el-button :icon="GoldMedal" round v-btn @click="router.push({
-          path:'/teacher/exam',
-          query:{lessonId:activeLessonId}
-          })">考核评估</el-button>&nbsp;&nbsp;
+          <el-button :icon="GoldMedal" round v-btn @click="examAndReport">考核评估</el-button>&nbsp;&nbsp;
           <el-badge :value="12">
             <el-button :icon="Bell" circle v-btn/>
           </el-badge>&nbsp;&nbsp;&nbsp;
@@ -183,7 +188,8 @@ onBeforeMount(async () => {
 
   <!-- 中央内容区 -->
   <tc-container-full-row v-loading="loading"
-                         v-show="!router.currentRoute.value.path.includes('/teacher/edit')">
+                         v-if="!router.currentRoute.value.path.includes('/teacher/edit')
+                         && !router.currentRoute.value.path.includes('/teacher/test_paper')">
     <el-row>
       <!-- 左侧 -->
       <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
@@ -313,11 +319,13 @@ onBeforeMount(async () => {
   font-size: 1rem;
 }
 
+/*noinspection CssUnusedSymbol*/
 .lesson_link {
   color: #333333;
   font-size: 1rem;
 }
 
+/*noinspection CssUnusedSymbol*/
 .lesson_link_active {
   color: #000000;
   font-size: 1.5rem;
@@ -327,10 +335,14 @@ onBeforeMount(async () => {
 #lesson-list{
   border-right: none;
 }
+
+/*noinspection CssUnusedSymbol*/
 #lesson-list .el-menu-item.is-active{
   background-color: #f7f7f8;
   border-radius: 5px;
 }
+
+/*noinspection CssUnusedSymbol*/
 #lesson-list .el-menu-item:hover{
   background-color: transparent;
   color: #333333;

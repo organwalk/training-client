@@ -54,6 +54,11 @@ const routes = [
                         component:() => import('@/view/teacher-view/report/TeacherExamReportMange.vue')
                     }
                 ]
+            },
+            {
+                path: 'test_paper',
+                name: 'teacherExamEditTestPaper',
+                component:() => import('@/view/teacher-view/exam/TeacherExamEditTestPaper.vue')
             }
         ]
     }

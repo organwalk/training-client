@@ -145,3 +145,33 @@ export async function generateRandomHash() {
         .map(b => b.toString(16).padStart(2, '0'));
     return hashArray.join('');
 }
+
+// 自动生成递增选项
+export function getOptionLabel(array) {
+    // 获取最后一个选项的字母
+    const lastOption = array[array.length - 1];
+    let newLabel = '选项'
+    if (lastOption) {
+        // 获取最后一个选项的字母，并增加到下一个字母
+        const lastLabel = lastOption.label.trim();
+        const nextCharCode = lastLabel.charCodeAt(2) + 1;
+        newLabel += String.fromCharCode(nextCharCode);
+    } else {
+        newLabel += 'A';
+    }
+    return newLabel
+}
+
+// 由选项数组生成选项对象
+export function getOptionObj(array){
+    return array.reduce((result, item) => {
+        // 获取 label 属性的第四个字符作为键，值为空字符串
+        let key = item.label.charAt(2);
+        result[key] = item.content;
+        return result;
+    }, {})
+}
+
+export function convertToObjectArray(obj) {
+    return Object.entries(obj).map(([option, content]) => ({ option, content }));
+}

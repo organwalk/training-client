@@ -2,10 +2,14 @@
 import {ref, defineProps, defineEmits, watchEffect, reactive} from "vue";
 import {Close} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
+import {getDateTimeISO8601, getNowDateTime, plusDateTimeAboutHour} from "@/utils/dateUtil";
+import {addTestPaper} from "@/api/learn-api";
+import {ElMessage} from "element-plus";
+import {withLoading} from "@/utils/functionUtil";
 
 const showDialog = ref(false)
 const props = defineProps({
-  showDialog:Boolean
+  showDialog: Boolean
 })
 watchEffect(() => {
   showDialog.value = props.showDialog
@@ -21,15 +25,21 @@ const router = useRouter()
 
 // 提交考试信息
 const examInfo = reactive({
-  test_title:'',
-  teacher_id:sessionStorage.getItem('uid'),
-  lesson_id:router.currentRoute.value.query.lessonId,
-  start_datetime:'',
-  end_datetime:''
+  test_title: '',
+  teacher_id: sessionStorage.getItem('uid'),
+  lesson_id: router.currentRoute.value.query.lessonId,
+  start_datetime: String(getNowDateTime()),
+  end_datetime: String(plusDateTimeAboutHour(getNowDateTime(), 2))
 })
-const submit = () => {
-
-}
+const submit = withLoading(async () => {
+  examInfo.start_datetime = getDateTimeISO8601(new Date(examInfo.start_datetime))
+  examInfo.end_datetime = getDateTimeISO8601(new Date(examInfo.end_datetime))
+  const res = await addTestPaper(examInfo)
+  if (res.code === 2002){
+    ElMessage.success('已成功新建试卷')
+    closeDialog('add')
+  }
+}, loading)
 </script>
 
 <template>
@@ -71,6 +81,7 @@ const submit = () => {
               type="datetime"
               placeholder="选择开始时间"
               format="YYYY/MM/DD HH:mm:ss"
+              :clearable="false"
           />
         </el-form-item>
         <el-form-item label="考试结束时间">
@@ -79,6 +90,7 @@ const submit = () => {
               type="datetime"
               placeholder="选择结束时间"
               format="YYYY/MM/DD HH:mm:ss"
+              :clearable="false"
           />
         </el-form-item>
       </el-form>
