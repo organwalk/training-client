@@ -18,6 +18,6 @@
 执行以下代码安装依赖项
 
 ```shell
-npm i @vueuse/core axios element-plus vue-router vuex
+npm i 
 ```
 

@@ -2,14 +2,17 @@
 import {useRouter} from "vue-router";
 import {onBeforeMount, ref, watchEffect} from "vue";
 import {withLoading} from "@/utils/functionUtil";
-import {getTestPaperList} from "@/api/learn-api";
+import {deleteTest, getTestPaperList, setRelease} from "@/api/learn-api";
 import AddExamDialog from "@/view/teacher-view/exam/dialog/AddExamDialog.vue";
+import {ElMessage} from "element-plus";
+import EditExamDialog from "@/view/teacher-view/exam/dialog/EditExamDialog.vue";
 
 const router = useRouter()
 const lessonId = ref()
-watchEffect(() => {
+watchEffect(async () => {
   if (router.currentRoute.value.query.lessonId){
     lessonId.value = router.currentRoute.value.query.lessonId
+    await loadingTestPaper(10, 0)
   }
 })
 const loading = ref(false)
@@ -34,6 +37,7 @@ const pushRoute = (index) => {
 // 载入试卷列表
 const testPaperList = ref([])
 const loadingTestPaper = withLoading(async (pageSize, offset) => {
+  testPaperList.value = []
   const res = await getTestPaperList(sessionStorage.getItem('uid'), lessonId.value, pageSize, offset)
   if (res.code === 2002){
     testPaperList.value = res.data
@@ -60,10 +64,53 @@ const editTestPaper = (testId) => {
     }
   })
 }
+
+
+// 发布试卷
+const release = withLoading(async (testId) => {
+  const res = await setRelease(testId)
+  if (res.code === 2002){
+    ElMessage.success(res.msg)
+    await loadingTestPaper(10, 0)
+  }
+}, loading)
+
+// 编辑试卷信息
+const showEditDialog = ref(false)
+const closeEditTestInfo = async (des) => {
+  showEditDialog.value = false
+  if (des.split('-')[0] !== 'cancel') {
+    await loadingTestPaper(10, 0)
+  }
+}
+const testId = ref()
+const titleInfo = ref()
+const startDatetime = ref()
+const endDatetime = ref()
+const editTestInfo = (obj) => {
+
+  testId.value = obj['id']
+  titleInfo.value = obj['test_title']
+  startDatetime.value = obj['start_datetime']
+  endDatetime.value = obj['end_datetime']
+
+  showEditDialog.value = true
+}
+
+// 删除试卷
+const deleteTestPaper =  withLoading(async (testId) => {
+  const res = await deleteTest(testId)
+  if (res.code === 2002){
+    ElMessage.success(res.msg)
+    await loadingTestPaper(10, 0)
+  }
+}, loading)
+
+
+// 生命周期钩子
 onBeforeMount(async () => {
   await loadingTestPaper(10, 0)
 })
-
 </script>
 
 <template>
@@ -100,12 +147,17 @@ onBeforeMount(async () => {
             >
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250">
+        <el-table-column label="操作" width="300">
           <template #default="scope">
             <el-row>
-              <el-button type="primary" size="small">发布</el-button>
-              <el-button size="small" type="primary" color="#333" @click="editTestPaper(scope.row['id'])">编写试卷</el-button>
-              <el-button type="danger" size="small">删除</el-button>
+              <el-button size="small" @click="editTestInfo(scope.row)" v-btn>编辑</el-button>
+              <el-button type="primary" size="small"
+                         :disabled="scope.row['isRelease'] === 1"
+                         @click="release(scope.row['id'])" v-btn>发布</el-button>
+              <el-button size="small" type="primary" color="#333"
+                         :disabled="scope.row['isRelease'] === 1"
+                         @click="editTestPaper(scope.row['id'])" v-btn>编写试卷</el-button>
+              <el-button type="danger" size="small" @click="deleteTestPaper(scope.row['id'])" v-btn>删除</el-button>
             </el-row>
           </template>
         </el-table-column>
@@ -117,6 +169,12 @@ onBeforeMount(async () => {
 
   <AddExamDialog :show-dialog="showAddTestPaper"
                  @close="closeAddTestPaper"/>
+  <EditExamDialog v-if="showEditDialog" :show-dialog="showEditDialog"
+                  :test-id="testId"
+                  :title="titleInfo"
+                  :start_datetime="startDatetime"
+                  :end_datetime="endDatetime"
+                  @close="closeEditTestInfo"/>
 </template>
 
 <style scoped>
