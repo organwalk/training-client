@@ -3,7 +3,7 @@ import {ArrowLeft, Close, Minus, Plus} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router";
 import {onBeforeMount, ref, watchEffect} from "vue";
 import {withLoading} from "@/utils/functionUtil";
-import {cacheTestPaper, getQuestionList} from "@/api/learn-api";
+import {cacheTestPaper, editTestPaper, getQuestionList} from "@/api/learn-api";
 import {convertToObjectArray, getOptionLabel, getOptionObj} from "@/utils/dataUtil"
 import {ElMessage} from "element-plus";
 
@@ -17,7 +17,6 @@ let testId
 const title = ref()
 const time = ref()
 const startTime = ref()
-const score = ref(0)
 const loadingQuestionList = withLoading(async () => {
   const res = await getQuestionList(testId)
   if (res.code === 2002) {
@@ -26,10 +25,13 @@ const loadingQuestionList = withLoading(async () => {
     time.value = res.data.start_datetime + " 至 " + res.data.end_datetime
     questions.value = res.data["questions"]
   } else {
-    back()
+    await back()
   }
 }, loading)
-const back = () => {
+const back = async () => {
+  if (questions.value.length > 0) {
+    await saveTestPaper()
+  }
   window.history.back()
 }
 
@@ -167,6 +169,52 @@ const saveTestPaper = withLoading(async () => {
   }
 }, loading)
 
+// 提交编写
+const submit = withLoading(async () => {
+  let obj = {
+    questions:questions.value
+  }
+  const res = await editTestPaper(testId, obj)
+  if (res.code === 2002){
+    ElMessage.success(res.msg)
+    window.history.back()
+  }
+}, loading)
+
+// 动态计算总分
+const weight = {
+  "1":1,
+  "2":0.8,
+  "3":0.5
+}
+const scoreSum = ref(0)
+watchEffect(() => {
+  if (questions.value.length > 0){
+    let newScoreSum = 0;
+    questions.value.forEach(item => {
+      const score = importanceScoreMap[importanceValueMap[item['question']['importance_id']]];
+      const score_weight = weight[item['question']['importance_id']];
+      newScoreSum += score * score_weight;
+    });
+    // 计算分数差值，以更新总分
+    const scoreDifference = newScoreSum - scoreSum.value;
+    scoreSum.value += scoreDifference;
+  }
+})
+
+
+// 监听页面离开事件
+window.addEventListener('unload', async () => {
+  if (questions.value.length > 0){
+    await saveTestPaper()
+  }
+})
+window.addEventListener('beforeunload', async () => {
+  if (questions.value.length > 0){
+    await saveTestPaper()
+  }
+})
+
 
 // 生命周期钩子
 onBeforeMount(async () => {
@@ -179,7 +227,7 @@ onBeforeMount(async () => {
   <el-row>
     <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
     <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
-      <el-card shadow="never" style="border-radius: 0; border-top: none; border-bottom: none;margin-bottom: 15px"
+      <el-card shadow="never" style="border-radius: 0; border-top: none; border-bottom: none;"
                v-loading="loading">
         <template #header>
           <div class="card-header">
@@ -192,7 +240,7 @@ onBeforeMount(async () => {
               </el-col>
               <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17" style="text-align: right;">
                 <el-button round @click="saveTestPaper" v-btn>暂存试卷</el-button>
-                <el-button type="primary" color="#333" round v-btn>提交编写</el-button>
+                <el-button type="primary" color="#333" round v-btn :disabled="scoreSum !== 100" @click="submit">提交编写</el-button>
               </el-col>
             </el-row>
           </div>
@@ -219,24 +267,26 @@ onBeforeMount(async () => {
           <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" align="center">
             <el-tooltip
                 effect="dark"
-                content="总分计算规则：依照权重：必须 -> 1、重要 -> 0.6、一般 -> 0.4和各类型所占分数10、5、3计算"
+                content="总分计算规则：依照权重：必须 -> 1、重要 -> 0.8、一般 -> 0.5和各类型所占分数10、5、3计算"
                 placement="bottom"
             >
               <el-text>当前试题总分：
-                <el-text type="primary" size="large">{{ score }}</el-text>
+                <el-text type="primary" size="large">{{ scoreSum }}</el-text>
               </el-text>
             </el-tooltip>
           </el-col>
           <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" align="center">
-            <el-button @click="showAdd = true" type="primary" text>增加试题</el-button>
+            <el-button @click="showAdd = true" type="primary" text :disabled="scoreSum === 100" v-btn>增加试题</el-button>
           </el-col>
         </el-row>
         <el-divider/>
         <el-empty v-if="isEmpty" description="未编写任何试题"/>
-        <div style="height: 80vh; overflow-y: auto" v-if="!isEmpty">
+
+        <!-- 试题卡片 -->
+        <div style="height: 80vh; overflow-y: auto;" v-if="!isEmpty">
           <el-row>
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-              <el-card shadow="never" v-for="(item, index) in questions" :key="index">
+              <el-card shadow="never" style="margin-bottom: 10px" v-for="(item, index) in questions" :key="index">
                 <template #header>
                   <div class="card-header">
                     <el-row style="display: flex; align-items: center;">
@@ -247,16 +297,16 @@ onBeforeMount(async () => {
                       <el-col :xs="5" :sm="5" :md="5" :lg="5" :xl="5">
                         <el-text style="margin-left: 10px">分值：
                           <el-text type="primary">{{ importanceScoreMap[importanceValueMap[item.question.importance_id]] }}分</el-text>
-                        </el-text>
+                        </el-text>&nbsp;&nbsp;
+                        <el-text>权重：<el-text type="primary">{{ weight[item.question.importance_id] }}</el-text></el-text>
                       </el-col>
                       <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17" style="text-align: right;">
                         <el-button type="danger" round size="small" @click="deleteQuestions(index)" v-btn>删除此题</el-button>
-                        <el-button type="primary" round size="small" v-btn>编辑此题</el-button>
                       </el-col>
                     </el-row>
                   </div>
                 </template>
-                <span>1.&nbsp;&nbsp;</span>
+                <span>{{ index + 1 }}.&nbsp;&nbsp;</span>
                 <el-text size="large">{{ item.question.content }}</el-text>
                 <br/><br/>
                 <div v-for="(item, index) in convertToObjectArray(item.options)" :key="index">

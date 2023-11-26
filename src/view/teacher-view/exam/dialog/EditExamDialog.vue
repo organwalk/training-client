@@ -1,44 +1,44 @@
 <script setup>
 import {ref, defineProps, defineEmits, watchEffect, reactive} from "vue";
 import {Close} from "@element-plus/icons-vue";
-import {useRouter} from "vue-router";
-import {getDateTimeISO8601, getNowDateTime, plusDateTimeAboutHour} from "@/utils/dateUtil";
-import {addTestPaper} from "@/api/learn-api";
+import {getDateTimeISO8601} from "@/utils/dateUtil";
+import {editTestPaperInfo} from "@/api/learn-api";
 import {ElMessage} from "element-plus";
 import {withLoading} from "@/utils/functionUtil";
 
 const showDialog = ref(false)
 const props = defineProps({
-  showDialog: Boolean
+  showDialog: Boolean,
+  testId:Number,
+  title:String,
+  start_datetime:String,
+  end_datetime:String
 })
 watchEffect(() => {
   showDialog.value = props.showDialog
 })
+
 const emit = defineEmits(['close'])
 const closeDialog = (des) => {
   showDialog.value = false
-  examInfo.test_title = ""
   emit('close', des + '-' + Math.random())
 }
 const loading = ref(false)
-const router = useRouter()
 
 
 // 提交考试信息
 const examInfo = reactive({
-  test_title: '',
-  teacher_id: sessionStorage.getItem('uid'),
-  lesson_id: router.currentRoute.value.query.lessonId,
-  start_datetime: String(getNowDateTime()),
-  end_datetime: String(plusDateTimeAboutHour(getNowDateTime(), 2))
+  test_title: props.title,
+  start_datetime: props.start_datetime,
+  end_datetime: props.end_datetime
 })
 const submit = withLoading(async () => {
   examInfo.start_datetime = getDateTimeISO8601(new Date(examInfo.start_datetime))
   examInfo.end_datetime = getDateTimeISO8601(new Date(examInfo.end_datetime))
-  const res = await addTestPaper(examInfo)
+  const res = await editTestPaperInfo(props.testId, examInfo)
   if (res.code === 2002){
-    ElMessage.success('已成功新建试卷')
-    closeDialog('add')
+    ElMessage.success(res.msg)
+    closeDialog('edit')
   }
 }, loading)
 </script>

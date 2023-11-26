@@ -19,3 +19,23 @@ export function getQuestionList(testId){
 export function cacheTestPaper(testId, obj){
     return http.post('/learn/v1/test/cache/' + testId, obj)
 }
+
+// 编写试卷详细
+export function editTestPaper(testId, obj){
+    return http.post('/learn/v1/test/' + testId, obj)
+}
+
+// 发布试卷
+export function setRelease(testId){
+    return http.put('/learn/v1/test/' + testId)
+}
+
+// 编辑试卷信息
+export function editTestPaperInfo(testId, obj){
+    return http.put('/learn/v1/test/info/' + testId, obj)
+}
+
+// 根据试卷ID删除试卷
+export function deleteTest(testId){
+    return http.delete('/learn/v1/test/' + testId)
+}

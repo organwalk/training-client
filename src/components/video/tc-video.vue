@@ -96,7 +96,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div id="video" ref="video"></div>
+  <div id="video" ref="video" style="border-radius: 10px"></div>
 </template>
 
 <style scoped>
