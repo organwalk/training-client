@@ -61,6 +61,11 @@ const routes = [
                 component:() => import('@/view/teacher-view/exam/TeacherExamEditTestPaper.vue')
             }
         ]
+    },
+    {
+        path: '/test',
+        name: 'testView',
+        component:() => import('@/view/TestView.vue')
     }
 ]
 

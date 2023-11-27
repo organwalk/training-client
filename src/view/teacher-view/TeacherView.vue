@@ -166,7 +166,7 @@ onBeforeMount(async () => {
 <template>
   <!--顶部tag栏-->
   <tc-container-full-row>
-    <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}" style="border-radius: 0">
+    <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}" style="border-radius: 0;height: 10vh">
       <el-row style="height: 5vh">
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">
           <div style="display: flex;align-items: center;" @click="router.push('/teacher')">
@@ -193,7 +193,7 @@ onBeforeMount(async () => {
     <el-row>
       <!-- 左侧 -->
       <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
-        <el-card shadow="never" style="height: 95vh;border-top: none;border-radius: 0;overflow-y: auto">
+        <el-card shadow="never" style="height: 95vh;border-top: none;border-bottom: none;border-radius: 0;overflow-y: auto">
           <tc-container-full-row>
             <!-- 培训计划选择器 -->
             <el-select v-model="planId" @change="change">

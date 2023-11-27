@@ -9,12 +9,6 @@ import EditExamDialog from "@/view/teacher-view/exam/dialog/EditExamDialog.vue";
 
 const router = useRouter()
 const lessonId = ref()
-watchEffect(async () => {
-  if (router.currentRoute.value.query.lessonId){
-    lessonId.value = router.currentRoute.value.query.lessonId
-    await loadingTestPaper(10, 0)
-  }
-})
 const loading = ref(false)
 
 
@@ -36,13 +30,22 @@ const pushRoute = (index) => {
 
 // 载入试卷列表
 const testPaperList = ref([])
+const originTestPaperList = ref([])
 const loadingTestPaper = withLoading(async (pageSize, offset) => {
   testPaperList.value = []
+  originTestPaperList.value = []
   const res = await getTestPaperList(sessionStorage.getItem('uid'), lessonId.value, pageSize, offset)
   if (res.code === 2002){
     testPaperList.value = res.data
+    originTestPaperList.value = res.data
   }
 }, loading)
+watchEffect(async () => {
+  if (router.currentRoute.value.query.lessonId){
+    lessonId.value = router.currentRoute.value.query.lessonId
+    await loadingTestPaper(10, 0)
+  }
+})
 
 
 // 增加试卷
@@ -107,6 +110,14 @@ const deleteTestPaper =  withLoading(async (testId) => {
 }, loading)
 
 
+// 查询试卷
+const searchKey = ref('')
+const search = (keyword) => {
+  keyword ? testPaperList.value = originTestPaperList.value.filter(item => item['test_title'].includes(keyword))
+      : testPaperList.value = originTestPaperList.value
+}
+
+
 // 生命周期钩子
 onBeforeMount(async () => {
   await loadingTestPaper(10, 0)
@@ -116,7 +127,8 @@ onBeforeMount(async () => {
 <template>
   <el-menu
       id="exam-tab"
-      default-active="0"
+      style="height: 10vh"
+      :default-active="router.currentRoute.value.path.includes('report') ? '1' : '0'"
       text-color="#A8ABB2"
       active-text-color="#000000"
       mode="horizontal"
@@ -129,7 +141,7 @@ onBeforeMount(async () => {
       <el-row >
         <el-col :xs="21" :sm="21" :md="21" :lg="21" :xl="21">
           <el-button type="primary" @click="showAddTestPaper = true" v-btn>新建试卷</el-button>&nbsp;&nbsp;&nbsp;
-          <el-input placeholder="请输入试卷名搜索" type="textarea" rows="1" style="border-radius: 0;width: 80%"/>
+          <el-input v-model="searchKey" @input="search" placeholder="请输入试卷名搜索" type="textarea" rows="1" style="border-radius: 0;width: 80%"/>
         </el-col>
       </el-row>
     </el-card>
