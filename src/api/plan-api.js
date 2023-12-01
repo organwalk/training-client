@@ -133,3 +133,8 @@ export function deleteVideoTest(test_id){
 export function updateChapterName(chapterId, chapterNameObj){
     return http.put('/training/v2/lesson/chapter/' + chapterId, chapterNameObj)
 }
+
+// 获取指定学员所处的培训计划列表
+export function getPlanListByStudentId(studentId){
+    return http.get('/training/v1/student/plan/' + studentId)
+}
