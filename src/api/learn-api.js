@@ -39,3 +39,13 @@ export function editTestPaperInfo(testId, obj){
 export function deleteTest(testId){
     return http.delete('/learn/v1/test/' + testId)
 }
+
+// 获取指定员工所具有的培训计划列表
+export function getStudentAllPlanList(studentId){
+    return http.get('/learn/v1/plan/' + studentId + '/999999/0')
+}
+
+// 获取指定培训计划的课程列表
+export function getLessonListByPlanId(planId, studentId){
+    return http.get('/learn/v1/plan/lesson/'+ planId + '/' + studentId + '/999999/0')
+}

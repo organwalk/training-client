@@ -63,6 +63,23 @@ const routes = [
         ]
     },
     {
+        path: '/user',
+        name:'userView',
+        component:() => import('@/view/user-view/UserView.vue'),
+        children: [
+            {
+                path: 'lesson',
+                name: 'userLesson',
+                component:() => import('@/view/user-view/lesson/UserLessonList.vue')
+            },
+            {
+                path: 'chapter',
+                name: 'userChapter',
+                component:() => import('@/view/user-view/chapter/UserChapterList.vue')
+            }
+        ]
+    },
+    {
         path: '/test',
         name: 'testView',
         component:() => import('@/view/TestView.vue')
