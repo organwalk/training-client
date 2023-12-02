@@ -175,3 +175,15 @@ export function getOptionObj(array){
 export function convertToObjectArray(obj) {
     return Object.entries(obj).map(([option, content]) => ({ option, content }));
 }
+
+export function isJsonString(str) {
+    if (typeof str == 'string') {
+        try {
+            let obj=JSON.parse(str);
+            return !!(typeof obj == 'object' && obj);
+
+        } catch(e) {
+            return false;
+        }
+    }
+}

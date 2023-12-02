@@ -110,7 +110,7 @@ export function uploadLessonResource(obj){
 
 // 获取课程下的各章节资源列表
 export function getResourceLessonRid(lessonId){
-    return http.get('/resource/v2/lesson/list/' + lessonId)
+    return http.get('/resource/v1/lesson/list/' + lessonId)
 }
 
 // 根据课程教材ID获取教材
@@ -130,5 +130,5 @@ export function deleteResourceLesson(chapterId){
 
 // 获取指定教材资源类型
 export function getResourceLessonType(resourceId){
-    return http.get('/resource/v2/lesson/type/' + resourceId)
+    return http.get('/resource/v1/lesson/type/' + resourceId)
 }

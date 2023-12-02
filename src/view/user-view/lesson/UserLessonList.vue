@@ -61,7 +61,8 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <el-row style="height: 90vh" v-loading="loading">
+  <el-progress :percentage="50" color="#333" :duration="4" :indeterminate="true" :show-text="false" v-if="loading"/>
+  <el-row style="height: 90vh" v-if="!loading">
     <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
       <el-card shadow="never"
                style="border-radius: 0; height: 90vh;border-top: none;border-left: none;border-bottom: none;overflow-y: auto">
@@ -88,7 +89,7 @@ onBeforeMount(async () => {
                    border-top: none;border-left: none;border-bottom: none;overflow-y: auto">
             <el-row :gutter="15">
               <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">
-                <el-card shadow="hover" style="border-radius: 15px;background-color: #67C23A;color: #ffffff">
+                <el-card shadow="hover" style="border-radius: 15px;background-color: #333;color: #ffffff">
                   <h1 style="margin-top: 0;margin-bottom: 0">欢迎回来！</h1><br/>
                   <span style="font-weight: lighter;font-size: 0.8rem">{{ planPurpose }}</span>
                 </el-card>

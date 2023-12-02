@@ -76,6 +76,11 @@ const routes = [
                 path: 'chapter',
                 name: 'userChapter',
                 component:() => import('@/view/user-view/chapter/UserChapterList.vue')
+            },
+            {
+                path: 'textbook',
+                name: 'userTextBook',
+                component:() => import('@/view/user-view/textbook/UserTextBook.vue')
             }
         ]
     },

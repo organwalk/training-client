@@ -49,3 +49,48 @@ export function getStudentAllPlanList(studentId){
 export function getLessonListByPlanId(planId, studentId){
     return http.get('/learn/v1/plan/lesson/'+ planId + '/' + studentId + '/999999/0')
 }
+
+// 获取指定课程下的章节列表
+export function getChapterListByLesson(lessonId, studentId){
+    return http.get('/learn/v1/plan/lesson/chapter/' + lessonId + '/' + studentId)
+}
+
+// 根据课程ID和章节ID发布评论
+export function sendFatherComment(obj){
+    return http.post('/learn/v1/lesson/chapter/comment', obj)
+}
+
+// 根据课程和章节ID获取评论列表
+export function getChapterCommentList(lessonId, chapterId, userId, offset){
+    return http.get('/learn/v1/comment/lesson/chapter/' + lessonId + '/' + chapterId + '/' + userId + '/' + '/10/' + offset)
+}
+
+// 根据主评论ID进行点赞/取消点赞操作
+export function likeOrUnlikeFatherComment(userId, comment_id, state){
+    return http.post('/learn/v1/comment/like/' + userId + '/' + comment_id + '/' + state)
+}
+
+// 根据评论ID发布回复
+export function sendFatherReply(obj){
+    return http.post('/learn/v1/lesson/reply', obj)
+}
+
+// 根据课程和章节ID获取评论列表
+export function sendChildrenReply(obj){
+    return http.post('/learn/v1/lesson/reply/thread', obj)
+}
+
+// 根据跟帖回复ID进行点赞/取消点赞操作
+export function likeOrUnlikeChildrenComment(userId, replyId, state){
+    return http.post('/learn/v1/reply/like/' + userId + '/' + replyId + '/' + state)
+}
+
+// 根据主评论ID删除评论
+export function deleteFatherComment(commentId){
+    return http.delete('/learn/v1/comment/' + commentId)
+}
+
+// 根据跟帖回复ID删除评论
+export function deleteChildrenComment(replyId){
+    return http.delete('/learn/v1/reply/' + replyId)
+}

@@ -14,7 +14,7 @@ const router = useRouter()
     <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}" style="border-radius: 0;height: 10vh">
       <el-row style="height: 5vh">
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">
-          <div style="display: flex;align-items: center;" @click="router.push('/user')">
+          <div style="display: flex;align-items: center;" @click="router.push('/user/lesson')">
             <img :src="websiteIcon" alt="404" style="width: 40px;height: 40px">
             <span class="menu-logo" style="margin-left: 5px">TrainingClient</span>
           </div>
