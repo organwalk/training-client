@@ -89,7 +89,7 @@ onBeforeMount(async () => {
           <el-text >上一次学习至:&nbsp;&nbsp;<el-text type="primary">{{ overChapter ? overChapter['chapterName'] : '暂无' }}</el-text></el-text>
         </el-card><el-divider content-position="left">章节列表</el-divider>
         <el-card shadow="never" style="border: none;user-select: none;cursor: pointer;" v-loading="textBookLoading" :body-style="{paddingTop:0}">
-          <el-row v-for="(item, index) in chapterList" :key="index">
+          <el-row v-for="(item, index) in chapterList" :key="index" style="display: flex;align-items: center">
             <el-card shadow="hover" style="width: 100%;margin-top: 15px;border-radius: 10px" @click="pushTextBook(item.id, item.resourceId)">
               <el-row :style="{color: item.over ? '#909399' : '#333'}">
                 <el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2" >

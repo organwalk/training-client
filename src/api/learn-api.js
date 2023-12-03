@@ -94,3 +94,13 @@ export function deleteFatherComment(commentId){
 export function deleteChildrenComment(replyId){
     return http.delete('/learn/v1/reply/' + replyId)
 }
+
+// 发布学习笔记
+export function sendNote(userId, lessonId, chapterId, obj){
+    return http.post('/learn/v1/lesson/chapter/comment/note/' + userId + '/' + lessonId + '/' + chapterId,  obj)
+}
+
+// 根据笔记ID获取笔记
+export function getNote(noteId){
+    return http.get('/resource/v2/file/note/' + noteId)
+}

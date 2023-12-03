@@ -14,3 +14,8 @@ export function getTeacherAndLessonProgress(planId, teacherId){
 export function getStudentLearningProgress(){
     return http.get('/progress/v2/lesson/student/chapter/persent/')
 }
+
+// 标记课程章节为已完成
+export function setChapterOver(lessonId, chapterId, studentId){
+    return http.post('/progress/v1/chapter/' + lessonId + '/' + chapterId + '/' + studentId)
+}

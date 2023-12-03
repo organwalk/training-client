@@ -132,3 +132,16 @@ export function deleteResourceLesson(chapterId){
 export function getResourceLessonType(resourceId){
     return http.get('/resource/v1/lesson/type/' + resourceId)
 }
+
+// 上传学习笔记
+export function uploadNote(obj){
+    const formData = new FormData()
+    formData.append('lesson_id', obj['lesson_id'])
+    formData.append('chapter_id', obj['chapter_id'])
+    formData.append('up_id', obj['up_id'])
+    formData.append('note_title', obj['note_title'])
+    formData.append('note_des', obj['note_des'])
+    formData.append('note_file', obj['note_file'])
+
+    return http.formDataPost('/resource/v1/file/note', formData)
+}

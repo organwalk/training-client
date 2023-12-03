@@ -1,20 +1,25 @@
 <script setup>
 import {useRouter} from "vue-router";
-import {onMounted, ref} from "vue";
-import {getResourceLesson} from "@/api/resource-api";
+import {onBeforeMount, reactive, ref, watchEffect} from "vue";
+import {getResourceLesson, uploadNote} from "@/api/resource-api";
 import {withLoading} from "@/utils/functionUtil";
-import {ChatLineSquare, ChatSquare, EditPen, Memo} from "@element-plus/icons-vue";
+import {ChatLineSquare, ChatSquare, Close, EditPen, Memo} from "@element-plus/icons-vue";
 import {
   deleteChildrenComment,
   deleteFatherComment,
-  getChapterCommentList, likeOrUnlikeChildrenComment,
+  getChapterCommentList, getNote, likeOrUnlikeChildrenComment,
   likeOrUnlikeFatherComment,
   sendChildrenReply,
   sendFatherComment,
-  sendFatherReply
+  sendFatherReply, sendNote
 } from "@/api/learn-api";
 import {ElMessage} from "element-plus";
-import {isJsonString} from "@/utils/dataUtil";
+import {generateRandomHash, isJsonString} from "@/utils/dataUtil";
+import {setChapterOver} from "@/api/progress-api";
+import TcVideo from "@/components/video/tc-video.vue";
+import {videoURL} from "@/api/url-api";
+import {getVideoTestList} from "@/api/plan-api";
+import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
 
 const loading = ref(false)
 const router = useRouter()
@@ -193,11 +198,227 @@ const removeChildrenComment = async (replyId) => {
   }
 }
 
+
+// 编写学习笔记
+const showEditNote = ref(false)
+const openEditView = () => {
+  showEditNote.value = true
+  window.scrollTo({
+    top: window.pageYOffset,
+    behavior: 'smooth'
+  });
+}
+
+// 提交笔记
+const noteLoading = ref(false)
+const noteObj = reactive({
+  note_title: "",
+  note_des: "",
+  resource_note_id: Number
+})
+const markdownText = ref('')
+const submitNote = async () => {
+  if (!noteObj.note_title) {
+    ElMessage.warning("笔记标题不能为空")
+  } else if (!noteObj.note_des) {
+    ElMessage.warning("笔记描述不能为空")
+  } else if (!markdownText.value) {
+    ElMessage.warning("笔记内容不能为空")
+  } else {
+    noteLoading.value = true
+    const resourceId = await submitNoteResource()
+    if (resourceId) {
+      const obj = {
+        "note_title": noteObj.note_title,
+        "note_des": noteObj.note_des,
+        "resource_note_id": resourceId
+      }
+      const res = await sendNote(sessionStorage.getItem("uid"), lessonId.value, chapterId.value, obj)
+      if (res.code === 2002) {
+        showEditNote.value = false
+        ElMessage.success(res.msg)
+        await loadingFatherCommentList(0)
+      }
+    }
+  }
+  noteLoading.value = false
+}
+
+const submitNoteResource = async () => {
+  const fileName = await generateRandomHash()
+  let file = new File([new Blob([markdownText.value], {type: 'text/markdown'})], fileName + '.md')
+  const obj = {
+    lesson_id: lessonId.value,
+    chapter_id: chapterId.value,
+    up_id: sessionStorage.getItem("uid"),
+    note_title: noteObj.note_title,
+    note_des: noteObj.note_des,
+    note_file: file
+  }
+  const res = await uploadNote(obj)
+  if (res.code === 2002) {
+    return res.data
+  } else {
+    return null
+  }
+}
+
+// 本地保存笔记
+const saveMarkdown = async (text) => {
+  const markdownFile = new Blob([text], {type: 'text/markdown'});
+  const downloadLink = document.createElement('a');
+  downloadLink.href = URL.createObjectURL(markdownFile);
+  let fileName = "default"
+  if (noteObj.note_title) {
+    fileName = noteObj.note_title
+  }
+  downloadLink.download = fileName + '.md';
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+
+// 查看笔记详情
+const showNoteDetail = ref(false)
+const noteDetail = ref('')
+const viewNoteDetail = async (resourceId) => {
+  const res = await getNote(resourceId)
+  if (res.status === 200) {
+    noteDetail.value = res.data
+    showNoteDetail.value = true
+  }
+}
+
 const uid = ref(sessionStorage.getItem('uid'))
-onMounted(async () => {
+const videoUrl = ref()
+// 初始化和加载视频测试题
+const videoTest = reactive({
+  answerList: [],
+  pauseTimeList: [],
+  testTimeList: []
+})
+const videoTestLength = ref(0)
+const testList = ref()
+const loadingVideoTest = async () => {
+  const res = await getVideoTestList(resourceId.value)
+  if (res.code === 2002) {
+    // 赋值视频测试题列表
+    testList.value = res.data
+    videoTestLength.value = testList.value.length
+
+    // 获取需要出现试题的时间列表
+    videoTest.pauseTimeList = res.data.map(obj => ({id: obj.id, test_time: obj.test_time}))
+    if (videoTest.pauseTimeList.length > 0) {
+      videoTest.testTimeList = videoTest.pauseTimeList.map(({test_time}) => (test_time))
+    }
+
+  }
+}
+
+// 视频测试题相关
+const showVideoTest = ref(false)
+const isPlay = ref(false)
+const seekingTime = ref() // 正在跳帧的时间
+const isPreview = ref(true)
+const currentTime = ref(0)
+
+// 监听视频时间
+const isPauseVideo = ref(false)
+const question = ref()
+const isExitFullScreen = ref(false)
+watchEffect(() => {
+  if (isPreview.value && currentTime.value && videoTest.testTimeList.length > 0) {
+    // 如果当前时间刚好与测试时间相同，则触发暂停时间
+    if (videoTest.testTimeList.indexOf(currentTime.value) !== -1) {
+      question.value = testList.value.find(obj => obj.test_time === currentTime.value)
+
+      // 启动暂停，停止播放
+      isPauseVideo.value = true
+      isPlay.value = false
+
+      // 展示题目,并退出全屏
+      isExitFullScreen.value = true
+      showVideoTest.value = true
+    }
+  }
+})
+
+// 监听跳帧事件（当处于预览模式时）
+const seekTime = ref() // 想要恢复的跳帧时间
+watchEffect(() => {
+  // 处于预览模式，并拥有跳帧数值时
+  if (isPreview.value && seekingTime.value) {
+    // 从会话中获取视频测试题通过时间坐标
+    let trueTestTimeList = []
+    if (sessionStorage.getItem('trueTestTime')) {
+      let strTrueTestTime = sessionStorage.getItem('trueTestTime')
+      trueTestTimeList = strTrueTestTime.split(',').map(Number)
+    }
+    // 获取仍未答题的时间
+    const uniqueA = trueTestTimeList.filter((element) => !testList.value.map((obj) => (obj.test_time)).includes(element));
+    const uniqueB = testList.value.map((obj) => (obj.test_time)).filter((element) => !trueTestTimeList.includes(element));
+    let waitingAnswerTimeList = [...uniqueA, ...uniqueB]
+
+    // 如果跳帧的时间大于仍未答题的时间
+    if (seekingTime.value > waitingAnswerTimeList.sort((a, b) => a - b)[0]) {
+      ElMessage.warning({
+        grouping: true,
+        message: "尚有试题未回答，无法快进"
+      })
+      // 将跳帧时间恢复为上一次答题通过时间秒数 + 1s
+      if (trueTestTimeList.length > 0) {
+        seekTime.value = Number(trueTestTimeList[trueTestTimeList.length - 1]) + 1 + '-' + Math.random()
+      } else {
+        // 或者一题未答，则从1s开始
+        seekTime.value = 1 + '-' + Math.random()
+      }
+    }
+  }
+})
+
+// 关闭视频试题（答对时）
+const closeVideoTest = (des) => {
+  // 重置退出全屏状态
+  showVideoTest.value = false
+  isExitFullScreen.value = false
+
+  if (des.split('-')[0] !== 'cancel') {
+    // 保存答对的试题出现时间
+    if (sessionStorage.getItem('trueTestTime') !== null) {
+      let newTrueTestTime = sessionStorage.getItem('trueTestTime') + ',' + des.split('-')[3]
+      sessionStorage.setItem('trueTestTime', newTrueTestTime)
+    } else {
+      sessionStorage.setItem('trueTestTime', des.split('-')[3])
+    }
+    isPlay.value = true
+  }
+}
+
+const isVideoEnd = ref(false)
+
+watchEffect(async () => {
+  if (isVideoEnd.value){
+    await setChapterOver(lessonId.value, chapterId.value, sessionStorage.getItem("uid"))
+  }
+})
+
+// 监听页面关闭事件，关闭时，清空答题状态
+window.addEventListener('unload', function () {
+  sessionStorage.removeItem('trueTestTime')
+});
+
+onBeforeMount(async () => {
   if (resourceId.value) {
-    await loadingTextBook()
     await loadingFatherCommentList(0)
+    if (resourceType.value === 'md') {
+      await loadingTextBook()
+      await setChapterOver(lessonId.value, chapterId.value, sessionStorage.getItem("uid"))
+    } else {
+      loading.value = true
+      videoUrl.value = videoURL(resourceId.value)
+      await loadingVideoTest()
+      loading.value = false
+    }
   }
 })
 </script>
@@ -207,13 +428,27 @@ onMounted(async () => {
     <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
     <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
       <el-skeleton :rows="5" animated v-if="loading"/>
-      <el-card v-loading="loading" shadow="never" style="border: none">
+      <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'md'">
         <v-md-preview :text="mdContent" v-if="!loading"></v-md-preview>
+      </el-card>
+      <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'mp4'" align="center">
+        <br/><br/><tc-video :video-url="videoUrl"
+                  :pause-time-list="videoTest.pauseTimeList"
+                  :is-pause="isPauseVideo"
+                  :is-play="isPlay"
+                  :is-exit-full-screen="isExitFullScreen"
+                  :seek-time="seekTime"
+                  :width="640" :height="360"
+                  @get-current-time="(time) => { currentTime = time}"
+                  @get-seeking-time="(time) => { seekingTime = time}"
+                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"
+                  @get-end="(end) => { isVideoEnd = end }"
+                            v-if="!loading"/><br/><br/>
       </el-card>
     </el-col>
     <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
   </el-row>
-  <!--点击某个案件，滚动到下面的组件-->
+
 
   <el-row style="background-color: #f4f4f4;" ref="scrollToElement">
     <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
@@ -227,7 +462,7 @@ onMounted(async () => {
         <el-button type="primary" color="#f1f2f3" round @click="submitFatherContent">
           <el-text>评论</el-text>
         </el-button>
-        <el-button type="primary" color="#f1f2f3" round :icon="Memo">
+        <el-button type="primary" color="#f1f2f3" round :icon="Memo" @click="openEditView">
           <el-text>编写笔记</el-text>
         </el-button>
       </el-card>
@@ -241,7 +476,17 @@ onMounted(async () => {
             }}</el-tag></span></el-row>
           <el-row><span style="font-size: 0.8rem;color: #909399">{{ item['creat_datetime'] }}</span></el-row>
           <br/>
-          <span>{{ item.content }}</span><br/><br/>
+          <div v-if="isJsonString(item['content'])">
+            <el-tag type="info" size="small">学习笔记</el-tag>
+            <span style="font-weight: bolder;">&nbsp;&nbsp;{{ JSON.parse(item['content'])['note_title'] }}</span><br/>
+            <el-text type="info">{{ JSON.parse(item['content'])['note_des'] }}</el-text>
+            <br/><br/>
+            <el-link @click="viewNoteDetail(JSON.parse(item['content'])['resource_note_id'])">查看全文</el-link>
+            <br/><br/>
+          </div>
+          <div v-else>
+            <span>{{ item.content }}</span><br/><br/>
+          </div>
           <el-row style="display: flex;align-items: center;user-select: none">
 
             <!--            回复-->
@@ -279,7 +524,9 @@ onMounted(async () => {
             <el-row><span style="font-size: 0.8rem;color: #909399">{{ childItem['create_datetime'] }}</span></el-row>
             <br/>
             <div v-if="isJsonString(childItem.content)">
-              <el-text>回复{{ JSON.parse(childItem.content)['reply_mark'] }}：</el-text>
+              回复
+              <el-text type="primary">{{ JSON.parse(childItem.content)['reply_mark'] }}</el-text>
+              ：
               <span>{{ JSON.parse(childItem.content)['reply_content'] }}</span>
             </div>
             <div v-else>
@@ -314,7 +561,7 @@ onMounted(async () => {
             <!--          跟帖回复-->
             <el-row v-if="showChildrenReply === index">
               <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
-                <span>回复<el-text>@{{ childItem['real_name'] }}</el-text></span>
+                <span>回复<el-text type="primary">@{{ childItem['real_name'] }}</el-text></span>
                 <el-input v-model="childrenReplyContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
                 <br/><br/>
                 <el-button type="primary" color="#f1f2f3" round @click="replyChildrenComment(item['id'], childItem)">
@@ -342,7 +589,7 @@ onMounted(async () => {
   </el-row>
 
   <el-backtop :right="130" :bottom="200" style="color: #333"/>
-  <el-backtop :right="130" :bottom="140" style="color: #333">
+  <el-backtop :right="130" :bottom="140" style="color: #333" @click="openEditView">
     <el-icon>
       <EditPen/>
     </el-icon>
@@ -352,6 +599,86 @@ onMounted(async () => {
       <ChatLineSquare/>
     </el-icon>
   </el-backtop>
+
+  <el-dialog v-model="showEditNote"
+             v-if="showEditNote"
+             top="0"
+             width="95%"
+             style="border-radius: 15px;margin-top: 20px"
+             :close-on-click-modal="false"
+             :close-on-press-escape="false"
+             :show-close="false"
+             :lock-scroll="false"
+  >
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="showEditNote = false" :icon="Close" :disabled="noteLoading" style="border: none" circle/>
+          </el-col>
+          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;编写学习笔记</h3>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+            <el-button @click="submitNote" type="primary" color="#333" round :disabled="noteLoading">确认编写
+            </el-button>
+          </el-col>
+        </el-row>
+      </div>
+    </template>
+    <div v-loading="noteLoading">
+      <el-form :model="noteObj" label-position="top">
+        <el-form-item label="笔记标题">
+          <el-input v-model="noteObj.note_title" maxlength="20" minlength="1" show-word-limit/>
+        </el-form-item>
+        <el-form-item label="笔记描述">
+          <el-input v-model="noteObj.note_des" maxlength="50" minlength="1" show-word-limit/>
+        </el-form-item>
+        <el-form-item label="笔记正文">
+          <v-md-editor v-model="markdownText"
+                       height="80vh"
+                       :autofocus="true"
+                       @save="saveMarkdown"
+                       placeholder="请在此处编写学习笔记"
+                       :default-show-toc="true"
+          ></v-md-editor>
+        </el-form-item>
+
+      </el-form>
+    </div>
+  </el-dialog>
+
+
+  <el-dialog v-model="showNoteDetail"
+             v-if="showNoteDetail"
+             top="0"
+             width="95%"
+             style="border-radius: 15px;margin-top: 20px"
+             :close-on-click-modal="false"
+             :close-on-press-escape="false"
+             :show-close="false"
+             :lock-scroll="false"
+  >
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="showNoteDetail = false" :icon="Close" style="border: none" circle/>
+          </el-col>
+          <el-col :xs="17" :sm="17" :md="17" :lg="17" :xl="17">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;学习笔记正文</h3>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;"/>
+        </el-row>
+      </div>
+    </template>
+    <div style="height: 100vh;overflow-y: auto">
+      <v-md-preview :text="noteDetail"></v-md-preview>
+    </div>
+  </el-dialog>
+  <video-test-dialog :dialog="showVideoTest"
+                     :test-obj="question"
+                     @close="closeVideoTest"/>
 
 </template>
 
