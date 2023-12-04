@@ -1,6 +1,6 @@
 <script setup>
 import websiteIcon from "@/assets/website_icon.png";
-import {Bell, Reading} from "@element-plus/icons-vue";
+import {Bell, MostlyCloudy, Reading} from "@element-plus/icons-vue";
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
 import {useRouter} from "vue-router";
 
@@ -20,6 +20,7 @@ const router = useRouter()
           </div>
         </el-col>
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12" align="right">
+          <el-button :icon="MostlyCloudy" style="margin-right: 10px" round @click="router.push('/user/cloud')">云集</el-button>
           <el-badge :value="12">
             <el-button :icon="Bell" circle v-btn/>
           </el-badge>&nbsp;&nbsp;&nbsp;

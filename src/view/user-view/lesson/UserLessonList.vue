@@ -22,7 +22,7 @@ const loadingPlanList = withLoading(async () => {
     planStart.value = planList.value[planIndex.value]['training_start_time']
     planEnd.value = planList.value[planIndex.value]['training_end_time']
     planId.value = planList.value[planIndex.value]['id']
-    planPresent.value = parseInt(planList.value[planIndex.value]['present']) * 100 || 0
+    planPresent.value = planList.value[planIndex.value]['present'] * 100 % 100
   }
 }, loading)
 
@@ -36,7 +36,6 @@ const lessonList = ref([])
 const loadingLessonList = withLoading(async () => {
   const res = await getLessonListByPlanId(planId.value, sessionStorage.getItem("uid"))
   if (res.code === 2002){
-    console.log(res.data)
     lessonList.value = res.data
   }
 }, loading)
@@ -124,7 +123,7 @@ onBeforeMount(async () => {
                   <el-text style="font-weight: lighter;font-size: 0.8rem" line-clamp="3">{{ item['lessonDes'] }}</el-text>
                   <el-row style="margin-top: 10px;display: flex;align-items: center">
                     <el-col :xs="8" :sm="8" :md="8" :lg="18" :xl="8">
-                      <el-progress :percentage="parseInt(item['present']) * 100 || 0" :show-text="false"/>
+                      <el-progress :percentage="item['present'] * 100 % 100" :show-text="false"/>
                     </el-col>
                     <el-col :xs="8" :sm="8" :md="8" :lg="6" :xl="8" align="right">
                       <el-button text size="small" type="primary"

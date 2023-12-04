@@ -81,6 +81,11 @@ const routes = [
                 path: 'textbook',
                 name: 'userTextBook',
                 component:() => import('@/view/user-view/textbook/UserTextBook.vue')
+            },
+            {
+                path: 'cloud',
+                name: 'userCloud',
+                component:() => import('@/view/user-view/cloud/UserCloud.vue')
             }
         ]
     },
