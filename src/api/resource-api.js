@@ -145,3 +145,8 @@ export function uploadNote(obj){
 
     return http.formDataPost('/resource/v1/file/note', formData)
 }
+
+// 获取指定用户上传的资源文件列表
+export function getResourceListByUser(userId, offset){
+    return http.get('/resource/v1/file/normal/up/' + userId + '/6/' + offset)
+}

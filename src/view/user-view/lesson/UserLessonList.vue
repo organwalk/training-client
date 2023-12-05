@@ -18,6 +18,7 @@ const loadingPlanList = withLoading(async () => {
   const res = await getStudentAllPlanList(sessionStorage.getItem("uid"))
   if (res.code === 2002) {
     planList.value = res.data
+    sessionStorage.setItem("dept_id", planList.value[planIndex.value]['dept_id']);
     planPurpose.value = planList.value[planIndex.value]['training_purpose']
     planStart.value = planList.value[planIndex.value]['training_start_time']
     planEnd.value = planList.value[planIndex.value]['training_end_time']
