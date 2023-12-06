@@ -108,9 +108,7 @@ const upload = async () => {
         resourceName.value = ""
         uploadFileState.value = false
         uploadProgress.value = 0
-        if (tagId.value === uploadTagId.value){
-          await loadingDeptAndTagResource(tagId.value, 0)
-        }
+        location.reload()
         break
       }
     }
@@ -212,8 +210,6 @@ const authMap = {
   '2':'教师',
   '3':'管理员'
 }
-
-
 </script>
 
 <template>
@@ -223,7 +219,7 @@ const authMap = {
       <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">
         <el-card style="border-radius: 10px;user-select: none;height: 40vh;background-color: #409EFF;color: white">
           <h3 style="margin-top: 0;margin-bottom: 0">云集&nbsp;Cloud Storage</h3><br/>
-          <el-text style="color: #f1f2f3">云集是企业内的云存储服务，其目的是汇集企业内成员分享的各类知识库文档或其他相关资料。请您在上传文件时确保文件内容与部门及分类相同，若部门不存在分类标签，请联系管理员</el-text>
+          <el-text style="color: #f1f2f3">云集是企业内的云存储服务，其目的是汇集企业内成员分享的各类知识库文档或其他相关资料。请您在上传文件时确保文件内容与分类相同，若部门不存在分类标签，请联系管理员</el-text>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">

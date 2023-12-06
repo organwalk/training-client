@@ -15,9 +15,9 @@ export function getNormalResourceByDeptIdAndTagId(deptId, tagId, offset){
     return http.get('/resource/v1/file/normal/' + deptId + '/' + tagId + '/10/' + offset)
 }
 
-export const fileSliceSize = 2 * 1024 * 1024; // 每个文件切片大小定为5MB
-// 上传资源文件
-export function uploadNormalResource(infoObj, fileObj){
+export const fileSliceSize = 5 * 1024 * 1024; // 每个文件切片大小定为5MB
+
+const getFileFormData = (infoObj, fileObj) => {
     const formData = new FormData()
     formData.append('dept_id', infoObj.dept_id)
     formData.append('tag_id', infoObj.tag_id)
@@ -26,7 +26,11 @@ export function uploadNormalResource(infoObj, fileObj){
     for (let key in fileObj) {
         formData.append(key, fileObj[key]);
     }
-    return http.formDataPost('/resource/v1/file/normal', formData)
+    return formData
+}
+// 上传资源文件
+export function uploadNormalResource(infoObj, fileObj){
+    return http.formDataPost('/resource/v1/file/normal', getFileFormData(infoObj, fileObj))
 }
 
 // 获取指定资源文件详情
@@ -35,16 +39,8 @@ export function getNormalResourceDetail(rid){
 }
 
 // 编辑指定资源文件
-export function updateNormalResourceDetail(rid, obj, file){
-    const formData = new FormData()
-    formData.append('dept_id', obj.dept_id)
-    formData.append('tag_id', obj.tag_id)
-    formData.append('resource_name', obj.resource_name)
-    if (file){
-        formData.append('resource_file', file)
-    }
-    formData.append('up_id', obj.up_id)
-    return http.formDataPut('/resource/v1/normal/file/info/' + rid, formData)
+export function updateNormalResourceDetail(rid, infoObj, fileObj){
+    return http.formDataPut('/resource/v1/normal/file/info/' + rid, getFileFormData(infoObj, fileObj))
 }
 
 // 模糊搜索
@@ -149,4 +145,9 @@ export function uploadNote(obj){
 // 获取指定用户上传的资源文件列表
 export function getResourceListByUser(userId, offset){
     return http.get('/resource/v1/file/normal/up/' + userId + '/6/' + offset)
+}
+
+// 获取指定用户上传的资源所有文件列表
+export function getAllResourceListByUser(userId){
+    return http.get('/resource/v1/file/normal/up/' + userId + '/999999/0')
 }
