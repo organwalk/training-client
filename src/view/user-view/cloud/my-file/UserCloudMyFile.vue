@@ -4,8 +4,9 @@ import {onBeforeMount, ref} from "vue";
 import {Search} from "@element-plus/icons-vue";
 import {withLoading} from "@/utils/functionUtil";
 import {getDeptInfo} from "@/api/dept-api";
-import {getAllResourceListByUser, getResourceListByUser} from "@/api/resource-api";
+import {deleteNormalResource, getAllResourceListByUser, getResourceListByUser} from "@/api/resource-api";
 import UserCloudMyFIleEditDialog from "@/view/user-view/cloud/my-file/dialog/UserCloudMyFIleEditDialog.vue";
+import {ElMessage} from "element-plus";
 
 const loading = ref(false)
 
@@ -102,6 +103,14 @@ const closeEdit = async (des) => {
     await loadingUserResourceList(0)
   }
 }
+// 删除
+const deleteResource = async (rId) => {
+  const res = await deleteNormalResource(rId, sessionStorage.getItem("uid"))
+  if (res.code === 2002){
+    ElMessage.success(res.msg)
+    location.reload()
+  }
+}
 
 
 </script>
@@ -116,11 +125,21 @@ const closeEdit = async (des) => {
     <el-card style="border-radius: 10px;user-select: none;" align="center">
       <el-image :src="myFileIcon" fit="cover" style="border-radius: 50%;height: 20vh"></el-image>
       <div style="margin-top: 10px;margin-bottom: 10px">
-        <span style="font-weight: bolder">{{ deptName }}</span>
-        <el-divider direction="vertical"/>
-        <span style="font-weight: bolder">{{ userName }}</span>
-        <el-divider direction="vertical" border-style="dashed"/>
-        <span style="font-weight: bolder">{{ dataListTotal }}</span>
+        <el-row justify="center">
+          <el-statistic title="部门名" :value-style="{display:'none'}">
+            <template #suffix>
+              <span>{{ deptName }}</span>
+            </template>
+          </el-statistic>
+          <el-divider direction="vertical"/>
+          <el-statistic title="用户名" :value-style="{display:'none'}">
+            <template #suffix>
+              <span>{{ userName }}</span>
+            </template>
+          </el-statistic>
+          <el-divider direction="vertical" border-style="dashed"/>
+          <el-statistic title="上传量" :value="dataListTotal" />
+        </el-row>
       </div>
     </el-card>
     <br/>
@@ -150,10 +169,12 @@ const closeEdit = async (des) => {
                            }"
                            text>重新上传</el-button>
                 <el-divider direction="vertical"/>
-                <el-button size="small" type="danger" text>删除</el-button>
+                <el-button size="small" type="danger"
+                           @click="deleteResource(activity.id)"
+                           text>删除</el-button>
               </div>
               <template #reference>
-                <span>{{ activity.resource_name }}</span>
+                <span style="cursor: pointer">{{ activity.resource_name }}</span>
               </template>
             </el-popover>
           </el-timeline-item>
@@ -174,5 +195,8 @@ const closeEdit = async (des) => {
 <style scoped>
 /deep/ .el-timeline {
   padding-left: 0;
+}
+/deep/ .el-statistic__content{
+  font-size: 15px;
 }
 </style>

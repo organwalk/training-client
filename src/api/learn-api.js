@@ -104,3 +104,23 @@ export function sendNote(userId, lessonId, chapterId, obj){
 export function getNote(noteId){
     return http.get('/resource/v2/file/note/' + noteId)
 }
+
+// 学生获取指定教师课程的试卷列表
+export function getTestPaperByStudent(teacherId, lessonId, type){
+    return http.get('/learn/v1/test/student/' + teacherId + '/' + lessonId + '/' + type)
+}
+
+// 查看考试结果
+export function getTestResult(testId, studentId){
+    return http.get('/learn/v1/test/score/' + testId + '/' + studentId)
+}
+
+// 作答试卷
+export function writeTestPaper(testId, studentId, obj){
+    return http.post('/learn/v1/test/' + testId + '/' + studentId, obj)
+}
+
+// 学生获取正在进行的考试中已完成作答的试卷状态
+export function getOverTestPaperState(studentId, testId){
+    return http.get('/learn/v1/test/student/over_id/' + studentId + '/' + testId)
+}

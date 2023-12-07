@@ -407,7 +407,9 @@ window.addEventListener('unload', function () {
   sessionStorage.removeItem('trueTestTime')
 });
 
+const pageLoading = ref(false)
 onBeforeMount(async () => {
+  pageLoading.value = true
   if (resourceId.value) {
     await loadingFatherCommentList(0)
     if (resourceType.value === 'md') {
@@ -420,173 +422,179 @@ onBeforeMount(async () => {
       loading.value = false
     }
   }
+  pageLoading.value = false
 })
 </script>
 
 <template>
-  <el-row>
-    <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
-    <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
-      <el-skeleton :rows="5" animated v-if="loading"/>
-      <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'md'">
-        <v-md-preview :text="mdContent" v-if="!loading"></v-md-preview>
-      </el-card>
-      <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'mp4'" align="center">
-        <br/><br/><tc-video :video-url="videoUrl"
-                  :pause-time-list="videoTest.pauseTimeList"
-                  :is-pause="isPauseVideo"
-                  :is-play="isPlay"
-                  :is-exit-full-screen="isExitFullScreen"
-                  :seek-time="seekTime"
-                  :width="640" :height="360"
-                  @get-current-time="(time) => { currentTime = time}"
-                  @get-seeking-time="(time) => { seekingTime = time}"
-                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"
-                  @get-end="(end) => { isVideoEnd = end }"
-                            v-if="!loading"/><br/><br/>
-      </el-card>
-    </el-col>
-    <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
-  </el-row>
+  <el-progress color="#333"
+               :percentage="50"  :duration="4" :indeterminate="true" :show-text="false"
+               v-if="pageLoading"/>
+  <div v-show="!pageLoading">
+    <el-row>
+      <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
+      <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
+        <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'md'">
+          <v-md-preview :text="mdContent" ></v-md-preview>
+        </el-card>
+        <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'mp4'" align="center">
+          <br/><br/><tc-video :video-url="videoUrl"
+                              :pause-time-list="videoTest.pauseTimeList"
+                              :is-pause="isPauseVideo"
+                              :is-play="isPlay"
+                              :is-exit-full-screen="isExitFullScreen"
+                              :seek-time="seekTime"
+                              :width="640" :height="360"
+                              @get-current-time="(time) => { currentTime = time}"
+                              @get-seeking-time="(time) => { seekingTime = time}"
+                              @get-play="(state) => {isPauseVideo = !state; isPlay = state}"
+                              @get-end="(end) => { isVideoEnd = end }"
+                              v-if="!loading"/><br/><br/>
+        </el-card>
+      </el-col>
+      <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
+    </el-row>
 
 
-  <el-row style="background-color: #f4f4f4;" ref="scrollToElement">
-    <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
-    <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
-      <el-progress :percentage="50" color="#333" :duration="4" :indeterminate="true" :show-text="false" v-if="loading"/>
-      <br/>
-      <el-card shadow="never" style="border: none;border-radius: 0;height: 30vh" v-if="!loading">
-        <el-text>发表评论</el-text>
-        <el-input v-model="fatherContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
-        <br/><br/>
-        <el-button type="primary" color="#f1f2f3" round @click="submitFatherContent">
-          <el-text>评论</el-text>
-        </el-button>
-        <el-button type="primary" color="#f1f2f3" round :icon="Memo" @click="openEditView">
-          <el-text>编写笔记</el-text>
-        </el-button>
-      </el-card>
-      <br/>
-      <div v-loading="commentLoading">
-        <el-card v-for="(item, index) in fatherCommentList" :key="index"
-                 shadow="never" style="border: none;border-radius: 0;margin-bottom: 10px">
-          <el-row><span style="font-size: 0.9rem">{{ item.real_name }}&nbsp;<el-tag style="font-size: 0.7rem"
-                                                                                    type="warning" size="small" round>{{
-              item['dept_name']
-            }}</el-tag></span></el-row>
-          <el-row><span style="font-size: 0.8rem;color: #909399">{{ item['creat_datetime'] }}</span></el-row>
-          <br/>
-          <div v-if="isJsonString(item['content'])">
-            <el-tag type="info" size="small">学习笔记</el-tag>
-            <span style="font-weight: bolder;">&nbsp;&nbsp;{{ JSON.parse(item['content'])['note_title'] }}</span><br/>
-            <el-text type="info">{{ JSON.parse(item['content'])['note_des'] }}</el-text>
-            <br/><br/>
-            <el-link @click="viewNoteDetail(JSON.parse(item['content'])['resource_note_id'])">查看全文</el-link>
-            <br/><br/>
-          </div>
-          <div v-else>
-            <span>{{ item.content }}</span><br/><br/>
-          </div>
-          <el-row style="display: flex;align-items: center;user-select: none">
-
-            <!--            回复-->
-            <el-icon style="cursor: pointer;"
-                     @click="showFatherReply !== index ? showFatherReply = index : showFatherReply = null">
-              <ChatSquare/>
-            </el-icon>&nbsp;&nbsp;<el-text type="info">{{ item['replyObj']['total'] }}</el-text>
-
-            <!--            点赞-->
-            <el-icon style="margin-left: 15px;cursor: pointer;user-select: none">
-              <svg width="24" height="24" viewBox="0 0 48 48"
-                   @click="likeFatherComment(item)"
-                   :fill="item['like_state'] === 1 ? 'true' : 'none'">
-                <path
-                    d="M7 17v26m35.17-21.394l-5.948 18.697a1 1 0 01-.953.697H14V19h3l9.403-12.223a1 1 0 011.386-.196l2.535 1.87a6 6 0 012.044 6.974L31 19h9.265a2 2 0 011.906 2.606z"
-                    stroke="#333" stroke-width="3"/>
-              </svg>
-            </el-icon>&nbsp;&nbsp;<el-text type="info">{{ item['like_sum'] }}</el-text>
-
-            &nbsp;&nbsp;<el-button text type="danger" size="small"
-                                   @click="removeFatherComment(item['id'])"
-                                   v-if="String(item['user_id']) === String(uid)">删除
+    <el-row style="background-color: #f4f4f4;" ref="scrollToElement" v-show="!loading">
+      <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
+      <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
+        <el-progress :percentage="50" color="#333" :duration="4" :indeterminate="true" :show-text="false" v-if="loading"/>
+        <br/>
+        <el-card shadow="never" style="border: none;border-radius: 0;height: 30vh" v-if="!loading">
+          <el-text>发表评论</el-text>
+          <el-input v-model="fatherContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
+          <br/><br/>
+          <el-button type="primary" color="#f1f2f3" round @click="submitFatherContent">
+            <el-text>评论</el-text>
           </el-button>
-          </el-row>
-
-
-          <!-- 评论回复-->
-          <el-card v-for="(childItem, index) in item['replyObj']['list']" :key="index"
-                   shadow="never" style="border: none;border-radius: 0;">
-            <el-row><span style="font-size: 0.9rem">{{ childItem.real_name }}&nbsp;<el-tag style="font-size: 0.7rem"
-                                                                                           type="warning" size="small"
-                                                                                           round>{{
-                childItem['dept_name']
+          <el-button type="primary" color="#f1f2f3" round :icon="Memo" @click="openEditView">
+            <el-text>编写笔记</el-text>
+          </el-button>
+        </el-card>
+        <br/>
+        <div v-loading="commentLoading">
+          <el-card v-for="(item, index) in fatherCommentList" :key="index"
+                   shadow="never" style="border: none;border-radius: 0;margin-bottom: 10px">
+            <el-row><span style="font-size: 0.9rem">{{ item.real_name }}&nbsp;<el-tag style="font-size: 0.7rem"
+                                                                                      type="warning" size="small" round>{{
+                item['dept_name']
               }}</el-tag></span></el-row>
-            <el-row><span style="font-size: 0.8rem;color: #909399">{{ childItem['create_datetime'] }}</span></el-row>
+            <el-row><span style="font-size: 0.8rem;color: #909399">{{ item['creat_datetime'] }}</span></el-row>
             <br/>
-            <div v-if="isJsonString(childItem.content)">
-              回复
-              <el-text type="primary">{{ JSON.parse(childItem.content)['reply_mark'] }}</el-text>
-              ：
-              <span>{{ JSON.parse(childItem.content)['reply_content'] }}</span>
+            <div v-if="isJsonString(item['content'])">
+              <el-tag type="info" size="small">学习笔记</el-tag>
+              <span style="font-weight: bolder;">&nbsp;&nbsp;{{ JSON.parse(item['content'])['note_title'] }}</span><br/>
+              <el-text type="info">{{ JSON.parse(item['content'])['note_des'] }}</el-text>
+              <br/><br/>
+              <el-link @click="viewNoteDetail(JSON.parse(item['content'])['resource_note_id'])">查看全文</el-link>
+              <br/><br/>
             </div>
             <div v-else>
-              <span>{{ childItem.content }}</span>
+              <span>{{ item.content }}</span><br/><br/>
             </div>
-            <br/>
             <el-row style="display: flex;align-items: center;user-select: none">
 
               <!--            回复-->
               <el-icon style="cursor: pointer;"
-                       @click="showChildrenReply !== index ? showChildrenReply = index : showChildrenReply = null">
+                       @click="showFatherReply !== index ? showFatherReply = index : showFatherReply = null">
                 <ChatSquare/>
-              </el-icon>
+              </el-icon>&nbsp;&nbsp;<el-text type="info">{{ item['replyObj']['total'] }}</el-text>
 
               <!--            点赞-->
               <el-icon style="margin-left: 15px;cursor: pointer;user-select: none">
                 <svg width="24" height="24" viewBox="0 0 48 48"
-                     @click="likeChildrenComment(childItem)"
-                     :fill="childItem['like_state'] === 1 ? 'true' : 'none'">
+                     @click="likeFatherComment(item)"
+                     :fill="item['like_state'] === 1 ? 'true' : 'none'">
                   <path
                       d="M7 17v26m35.17-21.394l-5.948 18.697a1 1 0 01-.953.697H14V19h3l9.403-12.223a1 1 0 011.386-.196l2.535 1.87a6 6 0 012.044 6.974L31 19h9.265a2 2 0 011.906 2.606z"
                       stroke="#333" stroke-width="3"/>
                 </svg>
-              </el-icon>&nbsp;&nbsp;<el-text type="info">{{ childItem['like_sum'] }}</el-text>
+              </el-icon>&nbsp;&nbsp;<el-text type="info">{{ item['like_sum'] }}</el-text>
 
               &nbsp;&nbsp;<el-button text type="danger" size="small"
-                                     @click="removeChildrenComment(childItem['id'])"
-                                     v-if="String(childItem['user_id']) === String(uid)">删除
+                                     @click="removeFatherComment(item['id'])"
+                                     v-if="String(item['user_id']) === String(uid)">删除
             </el-button>
             </el-row>
 
-            <!--          跟帖回复-->
-            <el-row v-if="showChildrenReply === index">
+
+            <!-- 评论回复-->
+            <el-card v-for="(childItem, index) in item['replyObj']['list']" :key="index"
+                     shadow="never" style="border: none;border-radius: 0;">
+              <el-row><span style="font-size: 0.9rem">{{ childItem.real_name }}&nbsp;<el-tag style="font-size: 0.7rem"
+                                                                                             type="warning" size="small"
+                                                                                             round>{{
+                  childItem['dept_name']
+                }}</el-tag></span></el-row>
+              <el-row><span style="font-size: 0.8rem;color: #909399">{{ childItem['create_datetime'] }}</span></el-row>
+              <br/>
+              <div v-if="isJsonString(childItem.content)">
+                回复
+                <el-text type="primary">{{ JSON.parse(childItem.content)['reply_mark'] }}</el-text>
+                ：
+                <span>{{ JSON.parse(childItem.content)['reply_content'] }}</span>
+              </div>
+              <div v-else>
+                <span>{{ childItem.content }}</span>
+              </div>
+              <br/>
+              <el-row style="display: flex;align-items: center;user-select: none">
+
+                <!--            回复-->
+                <el-icon style="cursor: pointer;"
+                         @click="showChildrenReply !== index ? showChildrenReply = index : showChildrenReply = null">
+                  <ChatSquare/>
+                </el-icon>
+
+                <!--            点赞-->
+                <el-icon style="margin-left: 15px;cursor: pointer;user-select: none">
+                  <svg width="24" height="24" viewBox="0 0 48 48"
+                       @click="likeChildrenComment(childItem)"
+                       :fill="childItem['like_state'] === 1 ? 'true' : 'none'">
+                    <path
+                        d="M7 17v26m35.17-21.394l-5.948 18.697a1 1 0 01-.953.697H14V19h3l9.403-12.223a1 1 0 011.386-.196l2.535 1.87a6 6 0 012.044 6.974L31 19h9.265a2 2 0 011.906 2.606z"
+                        stroke="#333" stroke-width="3"/>
+                  </svg>
+                </el-icon>&nbsp;&nbsp;<el-text type="info">{{ childItem['like_sum'] }}</el-text>
+
+                &nbsp;&nbsp;<el-button text type="danger" size="small"
+                                       @click="removeChildrenComment(childItem['id'])"
+                                       v-if="String(childItem['user_id']) === String(uid)">删除
+              </el-button>
+              </el-row>
+
+              <!--          跟帖回复-->
+              <el-row v-if="showChildrenReply === index">
+                <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
+                  <span>回复<el-text type="primary">@{{ childItem['real_name'] }}</el-text></span>
+                  <el-input v-model="childrenReplyContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
+                  <br/><br/>
+                  <el-button type="primary" color="#f1f2f3" round @click="replyChildrenComment(item['id'], childItem)">
+                    <el-text>回复</el-text>
+                  </el-button>
+                </el-card>
+              </el-row>
+            </el-card>
+
+
+            <el-row v-if="showFatherReply === index">
               <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
-                <span>回复<el-text type="primary">@{{ childItem['real_name'] }}</el-text></span>
-                <el-input v-model="childrenReplyContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
+                <el-text>回复此评论</el-text>
+                <el-input v-model="fatherReplyContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
                 <br/><br/>
-                <el-button type="primary" color="#f1f2f3" round @click="replyChildrenComment(item['id'], childItem)">
+                <el-button type="primary" color="#f1f2f3" round @click="replyFatherComment(item)">
                   <el-text>回复</el-text>
                 </el-button>
               </el-card>
             </el-row>
           </el-card>
+        </div>
+      </el-col>
+      <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
+    </el-row>
+  </div>
 
-
-          <el-row v-if="showFatherReply === index">
-            <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
-              <el-text>回复此评论</el-text>
-              <el-input v-model="fatherReplyContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
-              <br/><br/>
-              <el-button type="primary" color="#f1f2f3" round @click="replyFatherComment(item)">
-                <el-text>回复</el-text>
-              </el-button>
-            </el-card>
-          </el-row>
-        </el-card>
-      </div>
-    </el-col>
-    <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
-  </el-row>
 
   <el-backtop :right="130" :bottom="200" style="color: #333"/>
   <el-backtop :right="130" :bottom="140" style="color: #333" @click="openEditView">

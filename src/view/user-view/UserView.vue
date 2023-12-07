@@ -3,15 +3,29 @@ import websiteIcon from "@/assets/website_icon.png";
 import {Bell, MostlyCloudy, Reading} from "@element-plus/icons-vue";
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
 import {useRouter} from "vue-router";
+import {computed} from "vue";
+import {useDeptStore} from "@/store/store";
+import {ElMessage} from "element-plus";
 
+const store = useDeptStore()
+const deptId = computed(() => store.deptId)
 const router = useRouter()
+
+const pushCloud = () => {
+  if (deptId.value || sessionStorage.getItem("dept_id")) {
+    router.push('/user/cloud')
+  } else {
+    ElMessage.warning("请等待当前页面加载完毕")
+  }
+}
 
 </script>
 
 <template>
   <!--顶部tag栏-->
   <tc-container-full-row>
-    <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}" style="border-radius: 0;height: 10vh">
+    <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}"
+             style="border-radius: 0;height: 10vh">
       <el-row style="height: 5vh">
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">
           <div style="display: flex;align-items: center;" @click="router.push('/user/lesson')">
@@ -20,7 +34,11 @@ const router = useRouter()
           </div>
         </el-col>
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12" align="right">
-          <el-button :icon="MostlyCloudy" style="margin-right: 10px" round @click="router.push('/user/cloud')">云集</el-button>
+          <el-button style="margin-right: 10px"
+                     :icon="MostlyCloudy"
+                     @click="pushCloud"
+                     round v-btn>云集
+          </el-button>
           <el-badge :value="12">
             <el-button :icon="Bell" circle v-btn/>
           </el-badge>&nbsp;&nbsp;&nbsp;

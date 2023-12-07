@@ -86,8 +86,18 @@ const routes = [
                 path: 'cloud',
                 name: 'userCloud',
                 component:() => import('@/view/user-view/cloud/UserCloud.vue')
+            },
+            {
+                path:'exam',
+                name: 'userExam',
+                component:() => import('@/view/user-view/exam/UserExamList.vue')
             }
         ]
+    },
+    {
+        path: '/user/test',
+        name: 'userTest',
+        component:() => import('@/view/user-view/exam/UserExamTestPaper.vue')
     },
     {
         path: '/test',

@@ -3,6 +3,7 @@ import {onBeforeMount, ref} from "vue";
 import {withLoading} from "@/utils/functionUtil";
 import {getLessonListByPlanId, getStudentAllPlanList} from "@/api/learn-api";
 import {useRouter} from "vue-router";
+import {useDeptStore} from "@/store/store";
 
 const loading = ref(false)
 
@@ -14,11 +15,13 @@ const planPurpose = ref('')
 const planStart = ref('')
 const planEnd = ref('')
 const planId = ref()
+const store = useDeptStore()
 const loadingPlanList = withLoading(async () => {
   const res = await getStudentAllPlanList(sessionStorage.getItem("uid"))
   if (res.code === 2002) {
     planList.value = res.data
     sessionStorage.setItem("dept_id", planList.value[planIndex.value]['dept_id']);
+    store.setDeptId(planList.value[planIndex.value]['dept_id'])
     planPurpose.value = planList.value[planIndex.value]['training_purpose']
     planStart.value = planList.value[planIndex.value]['training_start_time']
     planEnd.value = planList.value[planIndex.value]['training_end_time']
