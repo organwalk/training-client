@@ -4,7 +4,7 @@ import {onBeforeMount, ref, watchEffect} from "vue";
 import {withLoading} from "@/utils/functionUtil";
 import {deleteTest, getTestPaperList, setRelease} from "@/api/learn-api";
 import AddExamDialog from "@/view/teacher-view/exam/dialog/AddExamDialog.vue";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElNotification} from "element-plus";
 import EditExamDialog from "@/view/teacher-view/exam/dialog/EditExamDialog.vue";
 
 const router = useRouter()
@@ -75,6 +75,18 @@ const release = withLoading(async (testId) => {
   if (res.code === 2002){
     ElMessage.success(res.msg)
     await loadingTestPaper(10, 0)
+  }else {
+    if (String(res.msg).includes("时间冲突")){
+      setTimeout(() => {
+        ElNotification({
+          title: '时间冲突',
+          message: res.msg,
+          type: 'warning',
+          duration:0,
+          showClose:true
+        })
+      }, 3000)
+    }
   }
 }, loading)
 

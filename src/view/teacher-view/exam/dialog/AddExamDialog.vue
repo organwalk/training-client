@@ -29,7 +29,7 @@ const examInfo = reactive({
   test_title: '',
   teacher_id: sessionStorage.getItem('uid'),
   lesson_id: router.currentRoute.value.query.lessonId,
-  start_datetime: String(getNowDateTime()),
+  start_datetime: String(plusDateTimeAboutHour(getNowDateTime(), 1)),
   end_datetime: String(plusDateTimeAboutHour(getNowDateTime(), 2))
 })
 const submit = withLoading(async () => {
