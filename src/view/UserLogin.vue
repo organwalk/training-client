@@ -40,6 +40,8 @@ const login = async () => {
           case "teacher":
             window.location.href = "/teacher"
                 break
+          case "none":
+            window.location.href = "/user/lesson"
         }
       },500)
     }

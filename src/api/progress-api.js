@@ -24,3 +24,9 @@ export function getStudentLearningChapters(lesson_id , pageSize , offset){
 export function getStudentLearningProgressByLessonId(lesson_id , pageSize , offset){
     return http.get('/progress/v2/lesson/student/chapter/persent/' + lesson_id + '/' + pageSize + '/' + offset)
 }
+
+
+// 标记课程章节为已完成
+export function setChapterOver(lessonId, chapterId, studentId){
+    return http.post('/progress/v1/chapter/' + lessonId + '/' + chapterId + '/' + studentId)
+}

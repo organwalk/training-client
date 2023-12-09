@@ -128,3 +128,13 @@ export function editVideoTest(test_id, obj){
 export function deleteVideoTest(test_id){
     return http.delete('/training/v2/lesson/test/' + test_id)
 }
+
+// 编辑指定章节名称
+export function updateChapterName(chapterId, chapterNameObj){
+    return http.put('/training/v2/lesson/chapter/' + chapterId, chapterNameObj)
+}
+
+// 获取指定学员所处的培训计划列表
+export function getPlanListByStudentId(studentId){
+    return http.get('/training/v1/student/plan/' + studentId)
+}

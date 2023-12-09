@@ -1,7 +1,7 @@
 <script setup>
 import websiteIcon from "@/assets/website_icon.png";
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
-import {Bell, Reading} from "@element-plus/icons-vue";
+import {Bell, GoldMedal, Reading} from "@element-plus/icons-vue";
 import {onBeforeMount, ref} from "vue";
 import {getPlanListByTeacherId} from "@/api/plan-api";
 import {processProgress, selectPlanListSwitch} from "@/utils/dataUtil";
@@ -28,10 +28,10 @@ const getPlanIdList = withLoading(async (teacherId) => {
     planIdList.value = selectPlanListSwitch(res.data)
     planId.value = planIdList.value.find(item => {
       // 选择 正在进行 状态的第一个值为默认值
-      if (item.label === "正在进行") {
+      if (item['label'] === "正在进行") {
         return item
       }
-    }).options[0].value
+    })['options'][0].value
   } else {
     // 当无法获取培训计划列表时...
   }
@@ -45,17 +45,17 @@ const getPlanDetailHTML = async (id) => {
     planDetailHTML.value.set(id, '······')
     // 从原始计划列表中获取与聚焦事件相对应的对象
     let obj = originPlanList.value.find(item => {
-      if (item.id === Number(id)) {
+      if (item['id'] === Number(id)) {
         return item
       }
     })
     // 获取部门名称、渲染HTML模板并缓存入map结构中
-    const res = await getDeptInfo(obj.dept_id)
+    const res = await getDeptInfo(obj['dept_id'])
     obj.deptName = res.data.deptName
-    const html = `<strong>培训目的：</strong><p>${obj.training_purpose}</p><br/><br/>` +
-        `<strong>开始时间：</strong>${obj.training_start_time}<br/>` +
-        `<strong>结束时间：</strong>${obj.training_end_time}<br/>` +
-        `<strong>培训部门：</strong>${obj.deptName}`
+    const html = `<strong>培训目的：</strong><p>${obj['training_purpose']}</p><br/><br/>` +
+        `<strong>开始时间：</strong>${obj['training_start_time']}<br/>` +
+        `<strong>结束时间：</strong>${obj['training_end_time']}<br/>` +
+        `<strong>培训部门：</strong>${obj['deptName']}`
     planDetailHTML.value.set(id, html)
   }
 }
@@ -83,6 +83,9 @@ const searchLesson = (keyword) => {
 // 获取课程列表
 const lessonList = ref()
 const originLessonList = ref()
+const activeLessonId = ref()
+const activeLessonName = ref()
+const activeProgress = ref()
 const getLessonList = withLoading(async () => {
   const res = await getTeacherAndLessonProgress(planId.value, sessionStorage.getItem('uid'))
   if (res.code === 2002) {
@@ -90,28 +93,37 @@ const getLessonList = withLoading(async () => {
     originLessonList.value = lessonList.value
     // 初次载入时赋值选择的课程内容
     const {id, lesson_name, total_progress} = lessonList.value[0]
-    activeLessonId.value = id
-    setActiveValue(lesson_name, total_progress)
+    setActiveValue(id, lesson_name, total_progress)
   }
 }, loading)
-const setActiveValue = (lesson_name, total_progress) => {
+// 当切换不同课程时
+const whenChangeLesson = (element) => {
+  const {id, lesson_name, total_progress} = lessonList.value[element]
+  setActiveValue(id, lesson_name, total_progress)
+  if (router.currentRoute.value.fullPath.includes('/teacher/exam/report')) {
+    router.push({
+      path:'/teacher/exam/report',
+      query:{
+        lessonId:id
+      }
+    })
+  } else if (router.currentRoute.value.fullPath.includes('/teacher/exam')) {
+    router.push({
+      path:'/teacher/exam',
+      query:{
+        lessonId:id
+      }
+    })
+  }
+}
+
+const setActiveValue = (id, lesson_name, total_progress) => {
+  activeLessonId.value = id
   activeLessonName.value = lesson_name
   activeProgress.value = total_progress
 }
 
-// 点击课程链接时变化样式
-const activeLessonId = ref()
-const activeLessonName = ref()
-const activeProgress = ref()
-const toggleActiveLesson = (clickedLessonId) => {
-  if (activeLessonId.value === clickedLessonId) {
-    activeLessonId.value = null; // 点击已经激活的元素，则取消激活状态
-  } else {
-    activeLessonId.value = clickedLessonId; // 点击未激活的元素，则激活该元素
-  }
-  const {lesson_name, total_progress} = lessonList.value.filter(item => item.id === activeLessonId.value)[0]
-  setActiveValue(lesson_name, total_progress)
-}
+
 
 
 // 添加新课程对话框控制
@@ -135,6 +147,14 @@ const refreshData = async (state) => {
 const router = useRouter()
 
 
+const examAndReport = () => {
+  router.push({
+    path:'/teacher/exam',
+    query:{lessonId:activeLessonId.value}
+  })
+}
+
+
 // 生命周期钩子
 onBeforeMount(async () => {
   // 加载培训计划选择器
@@ -146,15 +166,16 @@ onBeforeMount(async () => {
 <template>
   <!--顶部tag栏-->
   <tc-container-full-row>
-    <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}" style="border-radius: 0">
+    <el-card shadow="never" :body-style="{paddingBottom:'15px',paddingTop:'15px'}" style="border-radius: 0;height: 10vh">
       <el-row style="height: 5vh">
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12">
-          <div style="display: flex;align-items: center;">
+          <div style="display: flex;align-items: center;" @click="router.push('/teacher')">
             <img :src="websiteIcon" alt="404" style="width: 40px;height: 40px">
             <span class="menu-logo" style="margin-left: 5px">TrainingClient</span>
           </div>
         </el-col>
         <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12" align="right">
+          <el-button :icon="GoldMedal" round v-btn @click="examAndReport">考核评估</el-button>&nbsp;&nbsp;
           <el-badge :value="12">
             <el-button :icon="Bell" circle v-btn/>
           </el-badge>&nbsp;&nbsp;&nbsp;
@@ -163,14 +184,16 @@ onBeforeMount(async () => {
       </el-row>
     </el-card>
   </tc-container-full-row>
-  <router-view/>
+  <router-view v-if="!router.currentRoute.value.path.includes('/teacher/exam')"/>
 
   <!-- 中央内容区 -->
-  <tc-container-full-row v-loading="loading" v-show="!router.currentRoute.value.path.includes('/teacher/edit')">
+  <tc-container-full-row v-loading="loading"
+                         v-if="!router.currentRoute.value.path.includes('/teacher/edit')
+                         && !router.currentRoute.value.path.includes('/teacher/test_paper')">
     <el-row>
       <!-- 左侧 -->
       <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
-        <el-card shadow="never" style="height: 95vh;border-top: none;border-radius: 0;overflow-y: auto">
+        <el-card shadow="never" style="height: 95vh;border-top: none;border-bottom: none;border-radius: 0;overflow-y: auto">
           <tc-container-full-row>
             <!-- 培训计划选择器 -->
             <el-select v-model="planId" @change="change">
@@ -186,7 +209,7 @@ onBeforeMount(async () => {
                       effect="light"
                       placement="right-start"
                       :hide-after="0"
-                      offset="50"
+                      :offset="50"
                       :show-arrow="false"
                   >
                     <template #content>
@@ -225,24 +248,28 @@ onBeforeMount(async () => {
           <br/>
 
           <!-- 课程列表 -->
-          <li v-for="item in lessonList" :key="item">
-            <el-link type="info"
-                     style="font-family: 微软雅黑,serif;margin-bottom: 10px"
-                     class="lesson_link"
-                     :class="{ lesson_link_active: activeLessonId === item.id }"
-                     @click="toggleActiveLesson(item.id)"
-            >{{ item.lesson_name }}
-            </el-link>
-          </li>
+          <el-menu
+              id="lesson-list"
+              default-active="0"
+              text-color="#A8ABB2"
+              active-text-color="#000000"
+              @select="whenChangeLesson"
+          >
+            <el-menu-item v-for="(item, index) in lessonList" :key="item" :index="String(index)">
+              <span>{{ item.lesson_name }}</span>
+            </el-menu-item>
+          </el-menu>
         </el-card>
       </el-col>
       <!-- 中间 -->
-      <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="18">
-        <TeacherChapterManage :lesson-obj="{
+      <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="18" >
+        <TeacherChapterManage v-if="!router.currentRoute.value.path.includes('/teacher/exam')"
+                              :lesson-obj="{
           lesson_name:activeLessonName,
           lesson_id:activeLessonId,
           lesson_progress:activeProgress
         }" @refresh-data="refreshData"/>
+        <router-view/>
       </el-col>
     </el-row>
   </tc-container-full-row>
@@ -255,19 +282,23 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
-/deep/ .el-input__wrapper{
+/*noinspection CssUnusedSymbol*/
+/deep/ .el-input__wrapper {
   box-shadow: none;
   padding: 0
 }
 
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-textarea__inner {
   resize: none;
 }
 
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-select:hover:not(.el-select--disabled) .el-input__wrapper {
   box-shadow: none;
 }
 
+/*noinspection CssUnusedSymbol*/
 /deep/ .el-select {
   --el-select-border-color-hover: none;
   --el-select-input-focus-border-color: none;
@@ -288,14 +319,32 @@ onBeforeMount(async () => {
   font-size: 1rem;
 }
 
+/*noinspection CssUnusedSymbol*/
 .lesson_link {
   color: #333333;
   font-size: 1rem;
 }
 
+/*noinspection CssUnusedSymbol*/
 .lesson_link_active {
   color: #000000;
   font-size: 1.5rem;
   font-weight: bolder;
+}
+
+#lesson-list{
+  border-right: none;
+}
+
+/*noinspection CssUnusedSymbol*/
+#lesson-list .el-menu-item.is-active{
+  background-color: #f7f7f8;
+  border-radius: 5px;
+}
+
+/*noinspection CssUnusedSymbol*/
+#lesson-list .el-menu-item:hover{
+  background-color: transparent;
+  color: #333333;
 }
 </style>
