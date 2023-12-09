@@ -7,7 +7,7 @@ import {ChatLineSquare, ChatSquare, Close, EditPen, Memo} from "@element-plus/ic
 import {
   deleteChildrenComment,
   deleteFatherComment,
-  getChapterCommentList, getNote, likeOrUnlikeChildrenComment,
+  getChapterCommentList, getNote, getReplyList, likeOrUnlikeChildrenComment,
   likeOrUnlikeFatherComment,
   sendChildrenReply,
   sendFatherComment,
@@ -20,6 +20,9 @@ import TcVideo from "@/components/video/tc-video.vue";
 import {videoURL} from "@/api/url-api";
 import {getVideoTestList} from "@/api/plan-api";
 import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
+import {usePushNotificationStore} from "@/store/store";
+import {pushContent} from "@/utils/pushContentConfig";
+import TcPagination from "@/components/container/tc-pagination.vue";
 
 const loading = ref(false)
 const router = useRouter()
@@ -27,6 +30,7 @@ const resourceType = ref(router.currentRoute.value.query.resourceType)
 const resourceId = ref(router.currentRoute.value.query.resourceId)
 const lessonId = ref(router.currentRoute.value.query.lessonId)
 const chapterId = ref(router.currentRoute.value.query.chapterId)
+const pushStore = usePushNotificationStore()
 
 
 // 文档
@@ -84,14 +88,20 @@ const submitFatherContent = async () => {
 
 
 // 获取评论列表
+const fatherTotal = ref(0)
 const fatherCommentList = ref([])
 const loadingFatherCommentList = async (offset) => {
   commentLoading.value = true
   const res = await getChapterCommentList(lessonId.value, chapterId.value, sessionStorage.getItem("uid"), offset)
   if (res.code === 2002) {
+    fatherTotal.value = res.total
     fatherCommentList.value = res.data
   }
   commentLoading.value = false
+}
+const getNewFatherPageNumber = async (val) => {
+  const offset = (val - 1) * 10
+  await loadingFatherCommentList(offset)
 }
 
 
@@ -113,7 +123,24 @@ const likeFatherComment = async (item) => {
       item['like_state'] = 1
       item['like_sum'] += 1
     }
+  } else if (res.code === 2002) {
+    if (res.msg === "点赞成功！") {
+      noticeFatherLike(item)
+    }
   }
+}
+// 点赞主评论通知
+const noticeFatherLike = (item) => {
+  const sourceType = 'father_like'
+  let idList = []
+  idList.push(item['user_id'])
+  let obj = {
+    'sourceType': sourceType,
+    'content': pushContent[sourceType],
+    'quoteId': item['id'],
+    'receiverIdList': idList
+  }
+  pushStore.setPushBody(obj)
 }
 
 
@@ -130,10 +157,72 @@ const replyFatherComment = async (item) => {
   if (res.code === 2002) {
     showFatherReply.value = null
     fatherReplyContent.value = ''
-    await loadingFatherCommentList(0)
+    noticeReply(item['user_id'], res.data)
+    await loadingReplyList(item['id'], 0)
   }
 }
+// 评论主评论通知
+const noticeReply = (noticeId, quoteId) => {
+  const sourceType = 'reply'
+  let idList = []
+  idList.push(noticeId)
+  let obj = {
+    'sourceType': sourceType,
+    'content': pushContent[sourceType],
+    'quoteId': quoteId,
+    'receiverIdList': idList
+  }
+  pushStore.setPushBody(obj)
+}
 
+
+// 加载评论回复
+const replyOffsetList = ref([])
+const loadingReplyList = async (commentId, offset) => {
+  const res = await getReplyList(commentId, sessionStorage.getItem("uid"), offset)
+  if (res.code === 2002) {
+    fatherCommentList.value.forEach(item => {
+      if (item['id'] === commentId) {
+        if (offset === 0){
+          item['replyObj']['total'] = res.total
+          item['replyObj']['list'] = res.data
+          clearReplyOffset(commentId)
+        }else {
+          item['replyObj']['list'].push(...res.data)
+        }
+      }
+    })
+  }
+}
+const getMoreReply = async (commentId) => {
+  if (replyOffsetList.value.length === 0 || !replyOffsetList.value.find(item => item[commentId])){
+    await initReplyOffset(commentId)
+  }else{
+    await getNowOffsetReplyList(commentId)
+  }
+}
+const initReplyOffset = async (commentId) => {
+  const offsetObj = {}
+  offsetObj[commentId] = 2
+  replyOffsetList.value.push(offsetObj)
+  await loadingReplyList(commentId, 3)
+}
+const getNowOffsetReplyList = async (commentId) => {
+  replyOffsetList.value.forEach(item => {
+    item[commentId] += 1
+  })
+  const offset = replyOffsetList.value.find(item => item[commentId])[commentId]
+  const realOffset = ((offset - 1) * 3)
+  await loadingReplyList(commentId, realOffset)
+}
+
+const clearReplyOffset = (commentId) => {
+  if (replyOffsetList.value.length !== 0 || replyOffsetList.value.find(item => item[commentId])){
+    replyOffsetList.value.forEach(item => {
+      delete item[commentId]
+    })
+  }
+}
 
 // 回复子评论
 const childrenReplyContent = ref('')
@@ -143,7 +232,7 @@ const replyChildrenComment = async (commentId, childItem) => {
     "user_id": sessionStorage.getItem("uid"),
     "comment_id": commentId,
     "content": {
-      "reply_user_id": childItem['id'],
+      "reply_user_id": childItem['user_id'],
       "reply_mark": "@" + childItem['real_name'],
       "reply_content": childrenReplyContent.value
     }
@@ -152,7 +241,8 @@ const replyChildrenComment = async (commentId, childItem) => {
   if (res.code === 2002) {
     showChildrenReply.value = null
     childrenReplyContent.value = ''
-    await loadingFatherCommentList(0)
+    noticeReply(childItem['user_id'], res.data)
+    await loadingReplyList(commentId, 0)
   }
 }
 
@@ -175,7 +265,24 @@ const likeChildrenComment = async (item) => {
       item['like_state'] = 1
       item['like_sum'] += 1
     }
+  } else if (res.code === 2002) {
+    if (res.msg === "点赞成功！") {
+      noticeChildrenLike(item)
+    }
   }
+}
+// 点赞子评论通知
+const noticeChildrenLike = (item) => {
+  const sourceType = 'children_like'
+  let idList = []
+  idList.push(item['user_id'])
+  let obj = {
+    'sourceType': sourceType,
+    'content': pushContent[sourceType],
+    'quoteId': item['id'],
+    'receiverIdList': idList
+  }
+  pushStore.setPushBody(obj)
 }
 
 
@@ -190,11 +297,11 @@ const removeFatherComment = async (commentId) => {
 
 
 // 删除子回复
-const removeChildrenComment = async (replyId) => {
+const removeChildrenComment = async (commentId,replyId) => {
   const res = await deleteChildrenComment(replyId)
   if (res.code === 2002) {
     ElMessage.success(res.msg)
-    await loadingFatherCommentList(0)
+    await loadingReplyList(commentId, 0)
   }
 }
 
@@ -397,7 +504,7 @@ const closeVideoTest = (des) => {
 const isVideoEnd = ref(false)
 
 watchEffect(async () => {
-  if (isVideoEnd.value){
+  if (isVideoEnd.value) {
     await setChapterOver(lessonId.value, chapterId.value, sessionStorage.getItem("uid"))
   }
 })
@@ -428,28 +535,30 @@ onBeforeMount(async () => {
 
 <template>
   <el-progress color="#333"
-               :percentage="50"  :duration="4" :indeterminate="true" :show-text="false"
+               :percentage="50" :duration="4" :indeterminate="true" :show-text="false"
                v-if="pageLoading"/>
   <div v-show="!pageLoading">
     <el-row>
       <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
       <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
         <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'md'">
-          <v-md-preview :text="mdContent" ></v-md-preview>
+          <v-md-preview :text="mdContent"></v-md-preview>
         </el-card>
         <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'mp4'" align="center">
-          <br/><br/><tc-video :video-url="videoUrl"
-                              :pause-time-list="videoTest.pauseTimeList"
-                              :is-pause="isPauseVideo"
-                              :is-play="isPlay"
-                              :is-exit-full-screen="isExitFullScreen"
-                              :seek-time="seekTime"
-                              :width="640" :height="360"
-                              @get-current-time="(time) => { currentTime = time}"
-                              @get-seeking-time="(time) => { seekingTime = time}"
-                              @get-play="(state) => {isPauseVideo = !state; isPlay = state}"
-                              @get-end="(end) => { isVideoEnd = end }"
-                              v-if="!loading"/><br/><br/>
+          <br/><br/>
+          <tc-video :video-url="videoUrl"
+                    :pause-time-list="videoTest.pauseTimeList"
+                    :is-pause="isPauseVideo"
+                    :is-play="isPlay"
+                    :is-exit-full-screen="isExitFullScreen"
+                    :seek-time="seekTime"
+                    :width="640" :height="360"
+                    @get-current-time="time => currentTime = time"
+                    @get-seeking-time="time => seekingTime = time"
+                    @get-play="state => {isPauseVideo = !state; isPlay = state}"
+                    @get-end="end => isVideoEnd = end"
+                    v-if="!loading"/>
+          <br/><br/>
         </el-card>
       </el-col>
       <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
@@ -459,7 +568,8 @@ onBeforeMount(async () => {
     <el-row style="background-color: #f4f4f4;" ref="scrollToElement" v-show="!loading">
       <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
       <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
-        <el-progress :percentage="50" color="#333" :duration="4" :indeterminate="true" :show-text="false" v-if="loading"/>
+        <el-progress :percentage="50" color="#333" :duration="4" :indeterminate="true" :show-text="false"
+                     v-if="loading"/>
         <br/>
         <el-card shadow="never" style="border: none;border-radius: 0;height: 30vh" v-if="!loading">
           <el-text>发表评论</el-text>
@@ -519,65 +629,6 @@ onBeforeMount(async () => {
             </el-row>
 
 
-            <!-- 评论回复-->
-            <el-card v-for="(childItem, index) in item['replyObj']['list']" :key="index"
-                     shadow="never" style="border: none;border-radius: 0;">
-              <el-row><span style="font-size: 0.9rem">{{ childItem.real_name }}&nbsp;<el-tag style="font-size: 0.7rem"
-                                                                                             type="warning" size="small"
-                                                                                             round>{{
-                  childItem['dept_name']
-                }}</el-tag></span></el-row>
-              <el-row><span style="font-size: 0.8rem;color: #909399">{{ childItem['create_datetime'] }}</span></el-row>
-              <br/>
-              <div v-if="isJsonString(childItem.content)">
-                回复
-                <el-text type="primary">{{ JSON.parse(childItem.content)['reply_mark'] }}</el-text>
-                ：
-                <span>{{ JSON.parse(childItem.content)['reply_content'] }}</span>
-              </div>
-              <div v-else>
-                <span>{{ childItem.content }}</span>
-              </div>
-              <br/>
-              <el-row style="display: flex;align-items: center;user-select: none">
-
-                <!--            回复-->
-                <el-icon style="cursor: pointer;"
-                         @click="showChildrenReply !== index ? showChildrenReply = index : showChildrenReply = null">
-                  <ChatSquare/>
-                </el-icon>
-
-                <!--            点赞-->
-                <el-icon style="margin-left: 15px;cursor: pointer;user-select: none">
-                  <svg width="24" height="24" viewBox="0 0 48 48"
-                       @click="likeChildrenComment(childItem)"
-                       :fill="childItem['like_state'] === 1 ? 'true' : 'none'">
-                    <path
-                        d="M7 17v26m35.17-21.394l-5.948 18.697a1 1 0 01-.953.697H14V19h3l9.403-12.223a1 1 0 011.386-.196l2.535 1.87a6 6 0 012.044 6.974L31 19h9.265a2 2 0 011.906 2.606z"
-                        stroke="#333" stroke-width="3"/>
-                  </svg>
-                </el-icon>&nbsp;&nbsp;<el-text type="info">{{ childItem['like_sum'] }}</el-text>
-
-                &nbsp;&nbsp;<el-button text type="danger" size="small"
-                                       @click="removeChildrenComment(childItem['id'])"
-                                       v-if="String(childItem['user_id']) === String(uid)">删除
-              </el-button>
-              </el-row>
-
-              <!--          跟帖回复-->
-              <el-row v-if="showChildrenReply === index">
-                <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
-                  <span>回复<el-text type="primary">@{{ childItem['real_name'] }}</el-text></span>
-                  <el-input v-model="childrenReplyContent" type="textarea" rows="3" style="margin-top: 10px"></el-input>
-                  <br/><br/>
-                  <el-button type="primary" color="#f1f2f3" round @click="replyChildrenComment(item['id'], childItem)">
-                    <el-text>回复</el-text>
-                  </el-button>
-                </el-card>
-              </el-row>
-            </el-card>
-
-
             <el-row v-if="showFatherReply === index">
               <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
                 <el-text>回复此评论</el-text>
@@ -588,7 +639,84 @@ onBeforeMount(async () => {
                 </el-button>
               </el-card>
             </el-row>
+
+
+            <!-- 评论回复-->
+            <div>
+              <el-card v-for="(childItem, index) in item['replyObj']['list']" :key="index"
+                       shadow="never" style="border: none;border-radius: 0;">
+                <el-row><span style="font-size: 0.9rem">{{ childItem.real_name }}&nbsp;<el-tag style="font-size: 0.7rem"
+                                                                                               type="warning"
+                                                                                               size="small"
+                                                                                               round>{{
+                    childItem['dept_name']
+                  }}</el-tag></span></el-row>
+                <el-row><span style="font-size: 0.8rem;color: #909399">{{ childItem['create_datetime'] }}</span>
+                </el-row>
+                <br/>
+                <div v-if="isJsonString(childItem.content)">
+                  回复
+                  <el-text type="primary">{{ JSON.parse(childItem.content)['reply_mark'] }}</el-text>
+                  ：
+                  <span>{{ JSON.parse(childItem.content)['reply_content'] }}</span>
+                </div>
+                <div v-else>
+                  <span>{{ childItem.content }}</span>
+                </div>
+                <br/>
+                <el-row style="display: flex;align-items: center;user-select: none">
+
+                  <!--            回复-->
+                  <el-icon style="cursor: pointer;"
+                           @click="showChildrenReply !== index ? showChildrenReply = index : showChildrenReply = null">
+                    <ChatSquare/>
+                  </el-icon>
+
+                  <!--            点赞-->
+                  <el-icon style="margin-left: 15px;cursor: pointer;user-select: none">
+                    <svg width="24" height="24" viewBox="0 0 48 48"
+                         @click="likeChildrenComment(childItem)"
+                         :fill="childItem['like_state'] === 1 ? 'true' : 'none'">
+                      <path
+                          d="M7 17v26m35.17-21.394l-5.948 18.697a1 1 0 01-.953.697H14V19h3l9.403-12.223a1 1 0 011.386-.196l2.535 1.87a6 6 0 012.044 6.974L31 19h9.265a2 2 0 011.906 2.606z"
+                          stroke="#333" stroke-width="3"/>
+                    </svg>
+                  </el-icon>&nbsp;&nbsp;<el-text type="info">{{ childItem['like_sum'] }}</el-text>
+
+                  &nbsp;&nbsp;<el-button text type="danger" size="small"
+                                         @click="removeChildrenComment(item['id'], childItem['id'])"
+                                         v-if="String(childItem['user_id']) === String(uid)">删除
+                </el-button>
+                </el-row>
+
+                <!--          跟帖回复-->
+                <el-row v-if="showChildrenReply === index">
+                  <el-card shadow="never" style="border-radius: 0;height: 30vh;width: 100%" v-loading="loading">
+                    <span>回复<el-text type="primary">@{{ childItem['real_name'] }}</el-text></span>
+                    <el-input v-model="childrenReplyContent" type="textarea" rows="3"
+                              style="margin-top: 10px"></el-input>
+                    <br/><br/>
+                    <el-button type="primary" color="#f1f2f3" round
+                               @click="replyChildrenComment(item['id'], childItem)">
+                      <el-text>回复</el-text>
+                    </el-button>
+                  </el-card>
+                </el-row>
+              </el-card>
+              <el-row>
+                <div style="margin-left: 20px;">
+                  <el-link type="primary" style="margin-right: 10px"
+                           v-if="item['replyObj']['total'] > item['replyObj']['list'].length"
+                           @click="getMoreReply(item['id'])">更多回复</el-link>
+                  <el-link type="info"
+                           v-if="item['replyObj']['list'].length > 3"
+                           @click="item['replyObj']['list'].length = 3;clearReplyOffset(item['id'])">收起</el-link>
+                </div>
+              </el-row>
+
+            </div>
           </el-card>
+          <tc-pagination :total="fatherTotal" @page-current-change="getNewFatherPageNumber"/>
         </div>
       </el-col>
       <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
@@ -690,6 +818,9 @@ onBeforeMount(async () => {
 
 </template>
 
+<!--suppress CssUnusedSymbol -->
 <style scoped>
-
+.el-pagination {
+  justify-content: center;
+}
 </style>

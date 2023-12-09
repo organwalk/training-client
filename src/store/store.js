@@ -8,3 +8,19 @@ export const useDeptStore = defineStore('counter', () => {
     }
     return { deptId, setDeptId}
 })
+
+export const useNotificationStore = defineStore('notification', () => {
+    const showNotification = ref()
+    function isTrue(){
+        showNotification.value = Math.random()
+    }
+    return {showNotification, isTrue}
+})
+
+export const usePushNotificationStore = defineStore('push', () =>{
+    const pushBody = ref()
+    function setPushBody(obj){
+        pushBody.value = obj
+    }
+    return {pushBody, setPushBody}
+})

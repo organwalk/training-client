@@ -14,6 +14,8 @@ const whenCurrentChange = (val) => {
 watchEffect(() => {
   if (props.small){
     isSmall.value = props.small
+  }else {
+    isSmall.value = false
   }
 })
 
@@ -26,7 +28,7 @@ watchEffect(() => {
   <el-pagination background layout="prev, pager, next"
                  @current-change="whenCurrentChange"
                  :small="isSmall"
-                 :total="props.total" />
+                 :total="total" />
 </template>
 
 <style scoped>

@@ -124,3 +124,8 @@ export function writeTestPaper(testId, studentId, obj){
 export function getOverTestPaperState(studentId, testId){
     return http.get('/learn/v1/test/student/over_id/' + studentId + '/' + testId)
 }
+
+// 获取主评论的跟帖回复列表
+export function getReplyList(commentId, studentId, offset){
+    return http.get('/learn/v1/reply/' + commentId + '/' + studentId + '/' + '/3/' + offset)
+}
