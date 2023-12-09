@@ -14,3 +14,13 @@ export function getTeacherAndLessonProgress(planId, teacherId){
 export function getStudentLearningProgress(){
     return http.get('/progress/v2/lesson/student/chapter/persent/')
 }
+
+//获取学员在指定课程下学习到的章节列表
+export function getStudentLearningChapters(lesson_id , pageSize , offset){
+    return http.get('/progress/v2/lesson/student/chapter/' + lesson_id + '/' + pageSize + '/' + offset)
+}
+
+//获取学员在指定课程下学习进度百分比数据
+export function getStudentLearningProgressByLessonId(lesson_id , pageSize , offset){
+    return http.get('/progress/v2/lesson/student/chapter/persent/' + lesson_id + '/' + pageSize + '/' + offset)
+}

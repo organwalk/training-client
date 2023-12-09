@@ -105,6 +105,7 @@ const putDept = () =>{
 
 //获取指定部门--成员列表
 const getDeptMemberList = async(m_deptId,offset=0) => {
+  loading.value = true
   const res = await getDeptMember(m_deptId, 10, offset)
   if (res.code === 5005) {
     deptMemberList.value = []
@@ -220,8 +221,6 @@ const getNewMemberNumber = (val) => {
 
 
 
-
-//父类发给子类的事件，@子类发给父类
 onBeforeMount(() => {
   getDeptListFromApi(0)
   getUserAccountListFromApi()

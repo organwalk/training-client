@@ -1,7 +1,7 @@
 <script setup>
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
 import {defineProps, defineEmits, reactive, ref, computed, watchEffect} from "vue";
-import {More, Plus, Switch} from '@element-plus/icons-vue'
+import {More, Plus,  Switch} from '@element-plus/icons-vue'
 import UpdateLessonDialog from "@/view/teacher-view/dialog/UpdateLessonDialog.vue";
 import DeleteLessonDialog from "@/view/teacher-view/dialog/DeleteLessonDialog.vue";
 import TeacherChapterList from "@/view/teacher-view/TeacherChapterList.vue";
@@ -9,6 +9,11 @@ import AddChapterDialog from "@/view/teacher-view/dialog/AddChapterDialog.vue";
 import {getLessonDetail, startLesson} from "@/api/plan-api";
 import {ElMessage} from "element-plus";
 import {withLoading} from "@/utils/functionUtil";
+import StudentProgressList from "@/view/teacher-view/StudentProgressList.vue";
+import StudentRankingList from "@/view/teacher-view/StudentRankingList.vue";
+import GetStudentProgressListDialog from "@/view/teacher-view/dialog/GetStudentProgressListDialog.vue";
+import GetStudentRankingListDialog from "@/view/teacher-view/dialog/GetStudentRankingListDialog.vue";
+
 
 // 定义全局变量
 const loading = ref(false)
@@ -16,6 +21,7 @@ const props = defineProps({
   lessonObj: Object
 })
 const emit = defineEmits(['refreshData'])
+
 
 
 // 章节搜索相关
@@ -120,6 +126,16 @@ watchEffect(async () => {
 })
 
 
+//查看学生进度
+const showStudentProgressListDialog = ref(false)
+
+//查看学生进度排行榜
+const showStudentRankingListDialog = ref(false)
+
+
+
+
+
 // 操作方法
 const isReverse = ref(1)
 </script>
@@ -132,7 +148,6 @@ const isReverse = ref(1)
         <!-- 课程操作栏-->
         <tc-container-full-row>
           <el-row>
-
             <!-- 课程名 -->
             <el-col :xs="6" :sm="6" :md="6" :lg="3" :xl="6">
               <el-tag :type="type">{{ nowState }}</el-tag>
@@ -208,11 +223,38 @@ const isReverse = ref(1)
                             :keyword="keyword"/>
 
       </el-col>
+
+
       <!-- 右侧 -->
       <el-col :xs="9" :sm="9" :md="9" :lg="9" :xl="9">
         <el-card shadow="never">
           进度时间线
+          <el-button style="margin-left: 30vh;border: 1px solid #dadcdf" color="#f6f8fa"
+                     @click="showStudentProgressListDialog = true"
+                     >
+            全部
+          </el-button>
         </el-card>
+        <StudentProgressList :lesson-id="props.lessonObj.lesson_id"/>
+        <GetStudentProgressListDialog :lesson-id="props.lessonObj.lesson_id"
+                                      :show-student-progress-list-dialog = "showStudentProgressListDialog"
+                                      @close-student-progress-list-dialog = "args => showStudentProgressListDialog = args"
+                                      />
+
+        <el-card shadow="never">
+          进度排行榜
+          <el-button style="margin-left: 30vh;border: 1px solid #dadcdf" color="#f6f8fa"
+                     @click="showStudentRankingListDialog = true"
+                     >
+            全部
+          </el-button>
+        </el-card>
+        <StudentRankingList :lesson-id="props.lessonObj.lesson_id"/>
+        <GetStudentRankingListDialog :lesson-id="props.lessonObj.lesson_id"
+                                     :show-student-ranking-list-dialog = "showStudentRankingListDialog"
+                                     @close-student-ranking-list-dialog = "args => showStudentRankingListDialog = args"
+                                     />
+
       </el-col>
     </el-row>
   </el-card>
@@ -228,6 +270,10 @@ const isReverse = ref(1)
   <AddChapterDialog :lesson-id="props.lessonObj.lesson_id"
                     :show-add-chapter-dialog = "showAddChapterDialog"
                     @close-add-chapter-dialog="closeAddChapterDialog"/>
+
+
+
+
 </template>
 
 <style>

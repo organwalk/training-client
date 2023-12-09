@@ -10,7 +10,7 @@ import {getUserAccountList1} from "@/api/user-api";
 import {ElMessage} from "element-plus";
 
 
-
+const loading = ref(false)
 //定义从父类那接收的变量
 const props = defineProps({
   showDeptDialog: Boolean,
@@ -84,6 +84,7 @@ const getDeptInfoFromApi = async () =>{
 
 //编辑部门,只提取部门列表的负责人id和部门名称
 const editDept = async () => {
+  loading.value = true
   let obj = {
     'dept_name':deptInfo.dept_name,
     'head_id':deptInfo.head_id
@@ -94,6 +95,7 @@ const editDept = async () => {
     emit('newDept', true)
     closeDialog()
   }
+  loading.value = false
 }
 
 
@@ -105,6 +107,7 @@ const deleteDept = async () => {
     emit('newDept', true)
     closeDialog()
   }
+
 }
 
 
