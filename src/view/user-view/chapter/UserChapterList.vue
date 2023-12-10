@@ -79,7 +79,7 @@ onBeforeMount(async () => {
 
 <template>
   <el-progress :percentage="50" color="#333" :duration="1" :indeterminate="true" :show-text="false" v-if="loading"/>
-  <el-row style="height: 90vh" v-if="!loading">
+  <el-row style="height: 90vh;user-select: none" v-if="!loading">
     <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>
     <el-col :xs="16" :sm="16" :md="16" :lg="16" :xl="16">
       <el-card shadow="never" style="border: none">

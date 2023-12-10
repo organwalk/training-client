@@ -50,3 +50,13 @@ export function getUserAccountList1(type, offset){
 }
 
 
+// 用户自行修改账号信息
+export function updateUserAccountInfo(obj){
+    return http.put('/user/v1/account/' + sessionStorage.getItem("uid"), obj)
+}
+
+// 获取指定类别的列表
+export function getAccountList(type){
+    return http.get('/user/v3/account/' + type + '/999999/0')
+}
+

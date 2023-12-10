@@ -44,7 +44,7 @@ const newMemberDept = async(val) => {
 
 
 
-const total = ref()
+const total = ref(0)
 const dept_id = ref()
 const uid = ref()
 const deptInfoList = ref()
@@ -260,8 +260,8 @@ onBeforeMount(() => {
       </el-col>
     </el-row>
       </el-col>
-    </el-row><br/>
-  </div>
+    </el-row>
+  </div><br/>
 
 <!--  部门展示栏-->
   <el-row >
@@ -269,7 +269,7 @@ onBeforeMount(() => {
     <el-table style="width: 100%;"
               :data="deptInfoList"
               :default-sort="{prop:'id',order:'descending'}"
-              v-loading="loading"
+              v-loading="loading" border
               highlight-current-row stripe >
       <el-table-column type="index" fixed/>
       <el-table-column prop="id" label="部门DID" sortable/>
@@ -283,9 +283,6 @@ onBeforeMount(() => {
           </el-button>
           <el-button size="small" type="primary" @click="() => {showDeptDialog= true; title='编辑部门';dept_id = scope.row.id}">
             编辑
-          </el-button>
-          <el-button size="small" type="danger" @click="() => {showDeptDialog= true; title='删除部门'; dept_id = scope.row.id}">
-            删除
           </el-button>
         </template>
       </el-table-column>
@@ -303,11 +300,6 @@ onBeforeMount(() => {
     </el-col>
   </el-row>
   </div>
-
-
-
-<!--  -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
-
 
 <!--  查看部门详情-->
   <div v-if="showNewPage">
@@ -340,14 +332,14 @@ onBeforeMount(() => {
             </el-row>
           </el-col>
         </el-row><br/>
-      </div>
+      </div><br/>
 
 <!--        部门成员列表-->
       <el-row>
         <el-table style="width: 100%;"
                   :data = "deptMemberList"
                   :default-sort="{prop:'id',order:'descending'}"
-                  v-loading="loading"
+                  v-loading="loading" border
                   highlight-current-row stripe >
           <el-table-column type="index" fixed/>
           <el-table-column prop="id" label="成员ID"/>
@@ -360,23 +352,23 @@ onBeforeMount(() => {
                 showDeptDialog= true;
                 title='删除成员';
                 uid= scope.row.id}">
-                删除
+                移除
               </el-button>
             </template>
           </el-table-column>
         </el-table>
       </el-row>
-
-      <!--  分页器区域-->
-      <el-row style="margin-top: auto;">
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-          <tc-pagination :total="total"
-                         v-show="isShowMemberPage"
-                         @page-current-change="getNewMemberNumber"
-                         style="position: fixed;bottom: 5vh;left: 50%"/>
-        </el-col>
-      </el-row>
   </div>
+
+  <!--  分页器区域-->
+  <el-row style="margin-top: auto;">
+    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+      <tc-pagination :total="total"
+                     v-show="isShowMemberPage"
+                     @page-current-change="getNewMemberNumber"
+                     style="position: fixed;bottom: 5vh;left: 50%"/>
+    </el-col>
+  </el-row>
 
 
 

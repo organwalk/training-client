@@ -1,15 +1,15 @@
 <script setup>
-import {defineProps, onBeforeUpdate,  ref, watchEffect, defineEmits} from "vue";
+import {defineProps, ref, watchEffect, defineEmits} from "vue";
 import {getStudentLearningProgressByLessonId} from "@/api/progress-api";
 import {getUserInfoByUid} from "@/api/user-api";
-import {Search} from "@element-plus/icons-vue";
+import {withLoading} from "@/utils/functionUtil";
 
 
 const loading = ref(false)
 const showStudentRankingListDialog = ref(false)
 const props = defineProps({
-  showStudentRankingListDialog : Boolean,
-  lessonId : String
+  showStudentRankingListDialog: Boolean,
+  lessonId: Number
 })
 const emit = defineEmits(['closeStudentRankingListDialog'])
 watchEffect(() => {
@@ -20,12 +20,9 @@ watchEffect(() => {
 //获取学员在指定课程下学习进度百分比数据
 const studentLearningProgressByLessonIds = ref()
 const originStudentProgress = ref()
-const getStudentByLessonId = async () => {
-  loading.value = true
-  const res = await getStudentLearningProgressByLessonId(props.lessonId,999, 0)
-  if (res.code === 5005){
-    studentLearningProgressByLessonIds.value = []
-  }else{
+const getStudentByLessonId = withLoading(async () => {
+  const res = await getStudentLearningProgressByLessonId(props.lessonId, 999999, 0)
+  if (res.code === 2002) {
     studentLearningProgressByLessonIds.value = res.data
     const promises = studentLearningProgressByLessonIds.value.map(async (item) => {
       const res = await getUserInfoByUid(item.student_id);
@@ -34,41 +31,13 @@ const getStudentByLessonId = async () => {
     await Promise.all(promises);
     originStudentProgress.value = studentLearningProgressByLessonIds.value
   }
-  loading.value = false
-}
+}, loading)
 
 
-const keyword = ref('')
-function matchText(a, b) {
-  const regex = new RegExp(a, 'i');
-  return regex.test(b);
-}
-
-const searchFunction = (searchList , keyword) => {
-  const result = ref([])
-  searchList.find(item => {
-    if(matchText(keyword, item.student_id)){
-      result.value.push(item)
-    }
-  })
-  return result.value
-}
-
-
-const studentRankingByKeyword = async (keyword) => {
-  if (keyword === ""){
+watchEffect(async () => {
+  if (props.lessonId){
     await getStudentByLessonId()
-  }else {
-    loading.value = true;
-    studentLearningProgressByLessonIds.value = searchFunction(originStudentProgress.value, keyword)
-    loading.value = false;
   }
-}
-
-
-
-onBeforeUpdate(() => {
-  getStudentByLessonId()
 })
 
 function handleClose(done) {
@@ -81,34 +50,30 @@ function handleClose(done) {
 </script>
 
 
-
-
 <template>
-  <el-dialog v-model="showStudentRankingListDialog"
+  <el-dialog style="border-radius: 15px;margin-top: 10px" width="50%" top="0"
+             v-model="showStudentRankingListDialog"
              v-if="showStudentRankingListDialog"
-             title="学员完成进度排行榜"
-             width="30%"
-             :before-close="handleClose"
+             :before-close="handleClose" :lock-scroll="true"
   >
-    <el-input v-model="keyword"
-              @input="studentRankingByKeyword"
-              :prefix-icon="Search"
-              placeholder="请输入学员名称"
-              style="margin-bottom: 3vh"/>
-
-    <ol class="demo-progress" v-loading="loading">
-      <el-progress v-for="(item, index) in studentLearningProgressByLessonIds"
-                   :key="index"
-                   :percentage=" item.present * 100  "
-      >
-        {{ item.student_id }}
-      </el-progress>
-    </ol>
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <h3 style="margin-top: 0;margin-bottom: 0">学员进度排行</h3>
+        </el-row>
+      </div>
+    </template>
+    <el-card style="margin-top: -10px;height: 75vh;overflow-y: auto" shadow="never" v-loading="loading">
+      <div v-for="(item, index) in studentLearningProgressByLessonIds" :key="index">
+        <el-text>{{ index + 1 }}.&nbsp;{{ item.student_id }}&nbsp;&nbsp;{{ item['present'] * 100 }}%</el-text>
+        <el-progress style="margin-bottom: 10px;margin-top: 5px"
+                     :percentage=" item['present'] * 100" :show-text="false">
+        </el-progress>
+        <br/>
+      </div>
+    </el-card>
   </el-dialog>
 </template>
-
-
-
 
 
 <style scoped>

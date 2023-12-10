@@ -1,9 +1,8 @@
 <script setup>
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
 import {defineProps, defineEmits, reactive, ref, computed, watchEffect} from "vue";
-import {More, Plus,  Switch} from '@element-plus/icons-vue'
+import {More, Plus, Switch} from '@element-plus/icons-vue'
 import UpdateLessonDialog from "@/view/teacher-view/dialog/UpdateLessonDialog.vue";
-import DeleteLessonDialog from "@/view/teacher-view/dialog/DeleteLessonDialog.vue";
 import TeacherChapterList from "@/view/teacher-view/TeacherChapterList.vue";
 import AddChapterDialog from "@/view/teacher-view/dialog/AddChapterDialog.vue";
 import {getLessonDetail, startLesson} from "@/api/plan-api";
@@ -11,7 +10,6 @@ import {ElMessage} from "element-plus";
 import {withLoading} from "@/utils/functionUtil";
 import StudentProgressList from "@/view/teacher-view/StudentProgressList.vue";
 import StudentRankingList from "@/view/teacher-view/StudentRankingList.vue";
-import GetStudentProgressListDialog from "@/view/teacher-view/dialog/GetStudentProgressListDialog.vue";
 import GetStudentRankingListDialog from "@/view/teacher-view/dialog/GetStudentRankingListDialog.vue";
 
 
@@ -38,10 +36,6 @@ const operateObj = reactive([
   {
     text: "<div style='display: flex;align-items: center'><svg style='width: 15px;height: 15px' viewBox=\"0 0 1024 1024\" xmlns=\"http://www.w3.org/2000/svg\" data-v-ea893728=\"\"><path d=\"m199.04 672.64 193.984 112 224-387.968-193.92-112-224 388.032zm-23.872 60.16 32.896 148.288 144.896-45.696L175.168 732.8zM455.04 229.248l193.92 112 56.704-98.112-193.984-112-56.64 98.112zM104.32 708.8l384-665.024 304.768 175.936L409.152 884.8h.064l-248.448 78.336L104.32 708.8zm384 254.272v-64h448v64h-448z\" fill=\"currentColor\"></path></svg>" +
         "<span style='font-size: 1rem;font-weight: bolder;margin-left: 5px'>编辑课程</span></div><span style='font-size: 0.8rem'>编辑课程的标题和描述</span>"
-  },
-  {
-    text: "<div style='display: flex;align-items: center'><svg style='width: 15px;height: 15px' viewBox=\"0 0 1024 1024\" xmlns=\"http://www.w3.org/2000/svg\" data-v-ea893728=\"\"><path fill=\"currentColor\" d=\"M160 256H96a32 32 0 0 1 0-64h256V95.936a32 32 0 0 1 32-32h256a32 32 0 0 1 32 32V192h256a32 32 0 1 1 0 64h-64v672a32 32 0 0 1-32 32H192a32 32 0 0 1-32-32V256zm448-64v-64H416v64h192zM224 896h576V256H224v640zm192-128a32 32 0 0 1-32-32V416a32 32 0 0 1 64 0v320a32 32 0 0 1-32 32zm192 0a32 32 0 0 1-32-32V416a32 32 0 0 1 64 0v320a32 32 0 0 1-32 32z\"></path></svg>" +
-        "<span style='font-size: 1rem;font-weight: bolder;margin-left: 5px'>删除课程</span></div><span style='font-size: 0.8rem'>删除课程及该课程下的所有章节</span>"
   }
 ])
 const showUpdateLessonDialog = ref(false)
@@ -67,12 +61,6 @@ const getOperate = async (val) => {
 // 关闭对话框
 const closeUpdateDialog = (des) => {
   showUpdateLessonDialog.value = false
-  if (des.split('-')[0] !== 'cancel'){
-    emit('refreshData', true)
-  }
-}
-const closeDeleteDialog = (des) => {
-  showDeleteLessonDialog.value = false
   if (des.split('-')[0] !== 'cancel'){
     emit('refreshData', true)
   }
@@ -124,10 +112,6 @@ watchEffect(async () => {
     await getLessonState()
   }
 })
-
-
-//查看学生进度
-const showStudentProgressListDialog = ref(false)
 
 //查看学生进度排行榜
 const showStudentRankingListDialog = ref(false)
@@ -195,7 +179,7 @@ const isReverse = ref(1)
 
         <!-- 当前课程进度 -->
         <tc-container-full-row>
-          <el-progress :percentage="props.lessonObj.lesson_progress"/>
+          <el-progress :percentage="(props.lessonObj.lesson_progress)"/>
         </tc-container-full-row>
         <br/>
 
@@ -227,29 +211,41 @@ const isReverse = ref(1)
 
       <!-- 右侧 -->
       <el-col :xs="9" :sm="9" :md="9" :lg="9" :xl="9">
-        <el-card shadow="never">
-          进度时间线
-          <el-button style="margin-left: 30vh;border: 1px solid #dadcdf" color="#f6f8fa"
-                     @click="showStudentProgressListDialog = true"
-                     >
-            全部
-          </el-button>
-        </el-card>
-        <StudentProgressList :lesson-id="props.lessonObj.lesson_id"/>
-        <GetStudentProgressListDialog :lesson-id="props.lessonObj.lesson_id"
-                                      :show-student-progress-list-dialog = "showStudentProgressListDialog"
-                                      @close-student-progress-list-dialog = "args => showStudentProgressListDialog = args"
-                                      />
+        <el-card style="user-select: none" shadow="never">
+          <template #header>
+            <div class="card-header">
+              <el-row style="display: flex; align-items: center;">
+                <h3 style="margin-top: 0;margin-bottom: 0">学员进度时间线</h3>
+              </el-row>
+            </div>
+          </template>
+          <StudentProgressList :lesson-id="props.lessonObj.lesson_id"/>
+        </el-card><br/>
+<!--        <GetStudentProgressListDialog :lesson-id="props.lessonObj.lesson_id"-->
+<!--                                      :show-student-progress-list-dialog = "showStudentProgressListDialog"-->
+<!--                                      @close-student-progress-list-dialog = "args => showStudentProgressListDialog = args"-->
+<!--                                      />-->
 
         <el-card shadow="never">
-          进度排行榜
-          <el-button style="margin-left: 30vh;border: 1px solid #dadcdf" color="#f6f8fa"
-                     @click="showStudentRankingListDialog = true"
-                     >
-            全部
-          </el-button>
+          <template #header>
+            <div class="card-header">
+              <el-row style="display: flex; align-items: center;">
+                <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="18">
+                  <h3 style="margin-top: 0;margin-bottom: 0">进度排行榜</h3>
+                </el-col>
+                <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" style="text-align: right;">
+                  <el-button type="primary"
+                             @click="showStudentRankingListDialog = true"
+                             text>
+                    查看全部
+                  </el-button>
+                </el-col>
+              </el-row>
+            </div>
+          </template>
+          <StudentRankingList :lesson-id="props.lessonObj.lesson_id"/>
         </el-card>
-        <StudentRankingList :lesson-id="props.lessonObj.lesson_id"/>
+
         <GetStudentRankingListDialog :lesson-id="props.lessonObj.lesson_id"
                                      :show-student-ranking-list-dialog = "showStudentRankingListDialog"
                                      @close-student-ranking-list-dialog = "args => showStudentRankingListDialog = args"
@@ -263,10 +259,10 @@ const isReverse = ref(1)
   <UpdateLessonDialog :lesson-id="lessonObj['lesson_id']"
                       :show-update-lesson-dialog="showUpdateLessonDialog"
                       @close-update-lesson-dialog="closeUpdateDialog"/>
-  <DeleteLessonDialog :lesson-id="lessonObj['lesson_id']"
-                      :lesson-name="lessonObj['lesson_name']"
-                      :show-delete-lesson-dialog="showDeleteLessonDialog"
-                      @close-delete-lesson-dialog="closeDeleteDialog"/>
+<!--  <DeleteLessonDialog :lesson-id="lessonObj['lesson_id']"-->
+<!--                      :lesson-name="lessonObj['lesson_name']"-->
+<!--                      :show-delete-lesson-dialog="showDeleteLessonDialog"-->
+<!--                      @close-delete-lesson-dialog="closeDeleteDialog"/>-->
   <AddChapterDialog :lesson-id="lessonObj['lesson_id']"
                     :show-add-chapter-dialog = "showAddChapterDialog"
                     @close-add-chapter-dialog="closeAddChapterDialog"/>

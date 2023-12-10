@@ -29,7 +29,7 @@ const pushBody = computed(() => pushStore.pushBody)
 export function getPushClient(){
     const client = getPushServer()
     client.onopen = () => {
-        ElMessage.success("已成功与推送服务建立连接")
+        console.log("websocket connect success:" + new Date());
     };
     client.onmessage = (event) => {
         notificationStore.isTrue()

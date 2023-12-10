@@ -1,13 +1,15 @@
 <script setup>
 import {getStudentLearningChapters} from '@/api/progress-api'
 import {getUserInfoByUid} from "@/api/user-api";
-import {defineProps, onBeforeUpdate, ref, watchEffect} from "vue";
+import {defineProps, ref, watchEffect} from "vue";
+import {withLoading} from "@/utils/functionUtil";
+import {Right} from "@element-plus/icons-vue";
 
 const loading = ref(false)
 const showStudentProgressListDialog = ref(false)
 const props = defineProps({
   showStudentProgressListDialog : Boolean,
-  lessonId : String
+  lessonId : Number
 })
 
 watchEffect(() => {
@@ -15,13 +17,10 @@ watchEffect(() => {
 })
 
 //获取学员在指定课程下学习到的章节列表
-const studentLearningChapters = ref()
-const getStudentChapters = async () => {
-  loading.value = true
+const studentLearningChapters = ref([])
+const getStudentChapters = withLoading(async () => {
   const res = await getStudentLearningChapters(props.lessonId,6, 0)
-  if (res.code === 5005){
-    studentLearningChapters.value = []
-  }else{
+  if (res.code === 2002){
     studentLearningChapters.value = res.data
     const promises = studentLearningChapters.value.map(async (item) => {
       const res = await getUserInfoByUid(item.student_id);
@@ -29,27 +28,26 @@ const getStudentChapters = async () => {
     });
     await Promise.all(promises);
   }
-  loading.value = false
-}
+}, loading)
 
-
-onBeforeUpdate(() => {
-  getStudentChapters()
+watchEffect(async () => {
+  if (props.lessonId){
+    await getStudentChapters()
+  }
 })
 
 
 </script>
 
 <template>
-  <el-card shadow="never">
-    <el-timeline  v-loading="loading">
+  <el-card style="height: 380px" shadow="never" v-loading="loading">
+    <el-timeline style="padding-left: 0">
       <el-timeline-item
           v-for="( activity , index ) in studentLearningChapters"
           :key = "index"
-          :timestamp = "activity.completionDate"
+          :timestamp = "activity['completionDate']"
       >
-        {{ activity.student_id  }}
-        {{activity.chapter.chapter_name}}
+        <el-text>{{ activity.student_id  }}<el-icon><Right /></el-icon><el-text type="primary">{{activity['chapter'].chapter_name}}</el-text></el-text>
       </el-timeline-item>
     </el-timeline>
   </el-card>

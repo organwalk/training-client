@@ -28,7 +28,6 @@ const loadingTestPaper = withLoading(async (type) => {
         }
       }
     }
-    console.log(testPaperList.value)
   } else {
     testPaperList.value = []
   }
@@ -99,7 +98,7 @@ onBeforeMount(async () => {
         <br/>
         <el-row v-loading="loading">
           <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <el-table :data="testPaperList" border>
+            <el-table empty-text="尚无试卷" :data="testPaperList" border>
               <el-table-column type="index"/>
               <el-table-column prop="test_title" label="试卷名称"/>
               <el-table-column prop="start_datetime" label="开始时间"/>
@@ -121,11 +120,9 @@ onBeforeMount(async () => {
                       effect="dark"
                       content="考试结束五分钟后可查看成绩"
                       placement="top"
+                      v-if="typeof scope.row.state === 'boolean' && scope.row.state"
                   >
-                    <el-tag type="success"
-                            v-if="typeof scope.row.state === 'boolean' && scope.row.state">
-                      已完成考试
-                    </el-tag>
+                    <el-tag type="success">已完成考试</el-tag>
                   </el-tooltip>
                   <el-button type="primary" size="small"
                              v-show="isEarlierThanCurrentTime(scope.row.end_datetime)"

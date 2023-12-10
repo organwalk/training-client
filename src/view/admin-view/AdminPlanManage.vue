@@ -13,6 +13,7 @@ import {ElMessage} from "element-plus";
 import TcDeptSelect from "@/components/select/tc-dept-select.vue";
 import AdminPlanEditDialog from "@/view/admin-view/dialog/AdminPlanEditDialog.vue";
 import {getPlanProgress} from "@/api/progress-api";
+import {planStateConfig} from "@/config/globalConfig";
 
 // 定义全局变量
 const showPlanDialog = ref(false)
@@ -24,9 +25,9 @@ const total = ref()
 const nowDeptId = ref()
 const showEmpty = ref(false)
 const planState = {
-  "timeout":"逾期超时",
-  "end":"已经结束",
-  "over":"已经完成",
+  "timeout":"已逾期",
+  "over":"已完成",
+  "end":"已结束",
   "ongoing":"正在进行"
 }
 
@@ -65,8 +66,8 @@ const dataListProcess = () => {
     item.training_state = planState[item.training_state]
     const progressResult = await getPlanProgress()
     progressResult.data.forEach((p) => {
-      if(item.id === p.plan_id && typeof p.persent !== "undefined"){
-        item.progress = Math.round(p.persent * 100)
+      if(item.id === p['plan_id'] && typeof p['present'] !== "undefined"){
+        item.progress = parseInt(String(p['present'] * 100))
       } else {
         item.progress = 0
       }
@@ -180,7 +181,7 @@ const edit = (item) => {
     </el-menu>
   </tc-container-full-row><br/><br/>
   <!--列表操作栏-->
-  <div style="display: flex;flex-direction: column;height: 80vh;">
+  <div style="display: flex;flex-direction: column;height: 80vh;" v-loading="loading" >
     <tc-container-full-row>
       <el-row :gutter="15">
         <el-col :xs="3" :sm="3" :md="3" :lg="3" :xl="3">
@@ -200,7 +201,7 @@ const edit = (item) => {
     </tc-container-full-row><br/>
 <!--    培训计划列表区域-->
     <el-empty v-if="showEmpty"/>
-    <el-row :gutter="15" v-loading="loading" style="height: 70vh;overflow-y: auto"  v-if="!showEmpty">
+    <el-row :gutter="15" style="height: 70vh;overflow-y: auto"  v-if="!showEmpty || !loading">
       <el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8" v-for="(item, index) in dataList" :key="index">
         <el-card shadow="never" style="position:relative;height: 300px;margin-bottom: 15px;border-radius: 0">
           <el-row>
@@ -224,12 +225,12 @@ const edit = (item) => {
           <div style="position:absolute;bottom: 0;margin-bottom: 10px;width: 100%">
             <el-row style="margin-bottom: 10px">
               <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-                <el-progress :percentage="item.progress"/>
+                <el-progress style="margin-right: 10px" :percentage="item.progress"/>
               </el-col>
             </el-row>
             <el-row >
               <el-col :xs="5" :sm="5" :md="5" :lg="5" :xl="5" >
-                <el-tag type="success" style="font-size: 0.8rem;" round>{{ item.training_state }}</el-tag>
+                <el-tag :type="planStateConfig.stateColor[planStateConfig.stateEN[item.training_state]]" style="font-size: 0.8rem;" round>{{ item.training_state }}</el-tag>
               </el-col>
               <el-col :xs="19" :sm="19" :md="19" :lg="16" :xl="19" align="right">
                 <span style="font-size: 0.8rem;">{{ item.training_start_time }} ~ {{ item.training_end_time }}</span>

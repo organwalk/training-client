@@ -107,7 +107,7 @@ const addPlan = withLoading(async () => {
                         :rule-date="new Date(startDate)"
                         @get-select-date="getEndDate"/>
       </el-form-item>
-      <el-form-item label="选择培训部门">
+      <el-form-item label="选择负责部门">
         <tc-dept-select :default-value="true"
                         @get-dept-id="(deptId) => planObj.dept_id = deptId"/>
       </el-form-item>

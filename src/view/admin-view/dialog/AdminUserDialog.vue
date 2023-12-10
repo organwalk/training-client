@@ -3,12 +3,12 @@ import {defineProps, ref, watchEffect, defineEmits, reactive, onBeforeMount} fro
 import TcButtonConform from "@/components/button/tc-button-conform.vue";
 import {
   createUserAccount,
-  deleteAccountByUid,
   editUserAccountInfo,
   getAuthList,
   getUserAccountInfo
 } from "@/api/user-api";
 import {ElMessage} from "element-plus";
+import {Close} from "@element-plus/icons-vue";
 const props = defineProps({
   showUserDialog: Boolean,
   title:String,
@@ -120,19 +120,6 @@ const editUser = async () => {
   }
 }
 
-// 删除用户
-const deleteUser = async () => {
-  loading.value = true
-  const res = await deleteAccountByUid(props.uid)
-  if (res.code === 2002){
-    ElMessage.success(res.msg)
-    emit('newUser', true)
-    closeDialog()
-  }else {
-    loading.value = false
-  }
-}
-
 // 组件挂载前的动作
 onBeforeMount(()=>{
   getAuthListFromApi()
@@ -156,15 +143,37 @@ const checkFormObjFull = (obj) => {
 
 <template>
   <el-dialog v-model="showUserDialog"
-             :title="props.title"
-             width="30%"
+             v-if="showUserDialog"
+             width="45%"
              destroy-on-close
+             style="border-radius: 15px"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
              :before-close="closeDialog"
-             :show-close="!loading"
+             :show-close="false"
 
   >
+    <template #header>
+      <div class="card-header">
+        <el-row style="display: flex; align-items: center;">
+          <el-col :xs="1" :sm="1" :md="1" :lg="1" :xl="1">
+            <el-button @click="closeDialog" :disabled="loading"
+                       style="border: none" :icon="Close" circle/>
+          </el-col>
+          <el-col :xs="11" :sm="11" :md="11" :lg="11" :xl="11">
+            <h3 style="margin-top: 0;margin-bottom: 0">&nbsp;&nbsp;&nbsp;{{ props.title }}</h3>
+          </el-col>
+          <el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="12" style="text-align: right;">
+            <tc-button-conform @click="addUser" v-if="props.title === '新增用户'"
+                               :disabled="checkFormObjFull(addAccountInfo)" v-btn>
+              添加</tc-button-conform>
+            <tc-button-conform @click="editUser" v-if="props.title === '编辑用户'"
+                               :disabled="checkFormObjFull(editAccountInfo)" v-btn>
+              确认编辑</tc-button-conform>
+          </el-col>
+        </el-row>
+      </div>
+    </template>
     <el-form :model="accountInfo" label-width="70px" v-loading="loading" v-if="props.title !== '删除用户'">
       <el-form-item label="用户名称" v-if="props.title === '新增用户'">
         <el-input v-model="accountInfo.username"
@@ -190,28 +199,11 @@ const checkFormObjFull = (obj) => {
       <el-form-item label="身份权限" v-if="props.title !== '新增用户'">
         <el-radio-group v-model="accountInfo.auth_id">
           <el-radio v-for="(item, index) in authList" :key="index" :label="item.id">
-            <el-tag round>{{item.authName}}</el-tag>
+            <el-tag round>{{item['authName']}}</el-tag>
           </el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>
-    <span v-if="props.title ==='删除用户'">是否确认删除此用户？该操作不可撤回</span>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="closeDialog" :disabled="loading">取消</el-button>
-        <tc-button-conform @click="addUser" v-if="props.title === '新增用户'"
-                           :disabled="checkFormObjFull(addAccountInfo)" v-btn>
-          添加</tc-button-conform>
-        <tc-button-conform @click="editUser" v-if="props.title === '编辑用户'"
-                           :disabled="checkFormObjFull(editAccountInfo)" v-btn>
-          确认编辑</tc-button-conform>
-        <tc-button-conform v-if="props.title === '删除用户'"
-                           :loading="loading"
-                           @click="deleteUser">
-          确认删除
-        </tc-button-conform>
-      </span>
-    </template>
   </el-dialog>
 </template>
 

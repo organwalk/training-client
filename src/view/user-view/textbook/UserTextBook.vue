@@ -21,7 +21,7 @@ import {videoURL} from "@/api/url-api";
 import {getVideoTestList} from "@/api/plan-api";
 import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
 import {usePushNotificationStore} from "@/store/store";
-import {pushContent} from "@/utils/pushContentConfig";
+import {pushContent} from "@/config/pushContentConfig";
 import TcPagination from "@/components/container/tc-pagination.vue";
 
 const loading = ref(false)
@@ -94,7 +94,9 @@ const loadingFatherCommentList = async (offset) => {
   commentLoading.value = true
   const res = await getChapterCommentList(lessonId.value, chapterId.value, sessionStorage.getItem("uid"), offset)
   if (res.code === 2002) {
-    fatherTotal.value = res.total
+    if (res.total){
+      fatherTotal.value = res.total
+    }
     fatherCommentList.value = res.data
   }
   commentLoading.value = false
@@ -504,7 +506,7 @@ const closeVideoTest = (des) => {
 const isVideoEnd = ref(false)
 
 watchEffect(async () => {
-  if (isVideoEnd.value) {
+  if (isVideoEnd.value && sessionStorage.getItem("plan_state") === "ongoing") {
     await setChapterOver(lessonId.value, chapterId.value, sessionStorage.getItem("uid"))
   }
 })
@@ -521,7 +523,9 @@ onBeforeMount(async () => {
     await loadingFatherCommentList(0)
     if (resourceType.value === 'md') {
       await loadingTextBook()
-      await setChapterOver(lessonId.value, chapterId.value, sessionStorage.getItem("uid"))
+      if (sessionStorage.getItem("plan_state") === "ongoing"){
+        await setChapterOver(lessonId.value, chapterId.value, sessionStorage.getItem("uid"))
+      }
     } else {
       loading.value = true
       videoUrl.value = videoURL(resourceId.value)
@@ -716,7 +720,7 @@ onBeforeMount(async () => {
 
             </div>
           </el-card>
-          <tc-pagination :total="fatherTotal" @page-current-change="getNewFatherPageNumber"/>
+          <tc-pagination v-if="fatherTotal !== 0" :total="fatherTotal" @page-current-change="getNewFatherPageNumber"/>
         </div>
       </el-col>
       <el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="4"/>

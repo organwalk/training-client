@@ -29,10 +29,6 @@ watch(deptId, async (newVal, oldVal) => {
 })
 watch(dialogDes, async (newVal, oldVal) => {
   if(newVal !== oldVal && tagDeptId.value === originalDeptId.value){
-    console.log(dialogDes)
-    console.log(tagDeptId)
-    console.log(originalDeptId.value)
-    console.log(deptId.value)
     deptId.value = originalDeptId.value
     await loadingDataList()
   }

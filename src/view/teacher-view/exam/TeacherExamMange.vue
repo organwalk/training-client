@@ -6,10 +6,14 @@ import {deleteTest, getTestPaperList, setRelease} from "@/api/learn-api";
 import AddExamDialog from "@/view/teacher-view/exam/dialog/AddExamDialog.vue";
 import {ElMessage, ElNotification} from "element-plus";
 import EditExamDialog from "@/view/teacher-view/exam/dialog/EditExamDialog.vue";
+import {pushContent} from "@/config/pushContentConfig";
+import {usePushNotificationStore} from "@/store/store";
+import {getStudentLearningProgressByLessonId} from "@/api/progress-api";
 
 const router = useRouter()
 const lessonId = ref()
 const loading = ref(false)
+const pushStore = usePushNotificationStore()
 
 
 // 切换tab推送指定路由
@@ -74,6 +78,7 @@ const release = withLoading(async (testId) => {
   const res = await setRelease(testId)
   if (res.code === 2002){
     ElMessage.success(res.msg)
+    await noticeReleaseTest(testId)
     await loadingTestPaper(10, 0)
   }else {
     if (String(res.msg).includes("时间冲突")){
@@ -89,6 +94,21 @@ const release = withLoading(async (testId) => {
     }
   }
 }, loading)
+const noticeReleaseTest = async (testId) => {
+  const sourceType = 'test'
+  let idList = []
+  const res = await getStudentLearningProgressByLessonId(lessonId.value,999999, 0)
+  if (res.code === 2002){
+    idList.push(...res.data.map(item => item["student_id"]))
+    let obj = {
+      'sourceType': sourceType,
+      'content': pushContent[sourceType],
+      'quoteId': testId,
+      'receiverIdList': idList
+    }
+    pushStore.setPushBody(obj)
+  }
+}
 
 // 编辑试卷信息
 const showEditDialog = ref(false)
@@ -153,12 +173,14 @@ onBeforeMount(async () => {
       <el-row >
         <el-col :xs="21" :sm="21" :md="21" :lg="21" :xl="21">
           <el-button type="primary" @click="showAddTestPaper = true" v-btn>新建试卷</el-button>&nbsp;&nbsp;&nbsp;
-          <el-input v-model="searchKey" @input="search" placeholder="请输入试卷名搜索" type="textarea" rows="1" style="border-radius: 0;width: 80%"/>
+          <el-input v-model="searchKey" @input="search"
+                    :disabled="testPaperList.length === 0"
+                    placeholder="请输入试卷名搜索" type="textarea" rows="1" style="border-radius: 0;width: 80%"/>
         </el-col>
       </el-row>
     </el-card>
     <el-card shadow="never" style="border-radius: 0;border-bottom: none;border-left: none" v-loading="loading">
-      <el-table :data="testPaperList" stripe border>
+      <el-table :data="testPaperList" stripe border empty-text="暂未编写任何试卷">
         <el-table-column prop="test_title" label="试卷名" />
         <el-table-column prop="start_datetime" label="考试开始时间" />
         <el-table-column prop="end_datetime" label="考试结束时间" />

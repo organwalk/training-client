@@ -121,17 +121,6 @@ const uploadColors = [
 const uploadFileState = ref(false)
 const upload = async () => {
   uploadFileState.value = true
-  if (props.rid){
-    let file = null
-    if (resourceFile.value){
-      file = resourceFile.value.raw
-    }
-    const res = await updateNormalResourceDetail(props.rid, normalResourceInfo, file)
-    if (res.code === 2002){
-      ElMessage.success(res.msg)
-      closeNormalResource('edit')
-    }
-  }else {
     for (let i = 1; i <= getFileTotalSlice(); i++) {
       let chunk;
       if (i === getFileTotalSlice()) {
@@ -149,26 +138,40 @@ const upload = async () => {
         file_now_chunk: i,
         file_origin_name: resourceFile.value.raw.name
       }
-      if (i === 1){
-        await uploadNormalFile(i, fileObj)
+      if (props.rid){
+        await reUploadNormalFile(i, fileObj)
       }else {
-        setTimeout(async () => {
-          await uploadNormalFile(i, fileObj)
-        }, 3000)
+        await uploadNormalFile(i, fileObj)
       }
     }
-  }
   loading.value = false
 }
 
-const uploadNormalFile = async (i, fileObj) => {
-  const res = await uploadNormalResource(normalResourceInfo, fileObj)
+const reUploadNormalFile = async (i, fileObj) => {
+  const res = await updateNormalResourceDetail(props.rid, normalResourceInfo, fileObj)
   if (res.msg === "当前文件片段上传成功"){
     uploadProgress.value = Math.floor((i / getFileTotalSlice()) * 100);
   }else if (res.msg === "资源文件上传成功"){
     ElMessage.success(res.msg)
     uploadFileState.value = false
     closeNormalResource('add')
+  }else {
+    uploadFileState.value = false
+  }
+}
+
+const uploadNormalFile = async (i, fileObj) => {
+  const res = await uploadNormalResource(normalResourceInfo, fileObj)
+  if (res.code === 2002){
+    if (res.msg === "当前文件片段上传成功"){
+      uploadProgress.value = Math.floor((i / getFileTotalSlice()) * 100);
+    }else if (res.msg === "资源文件上传成功"){
+      ElMessage.success(res.msg)
+      uploadFileState.value = false
+      closeNormalResource('add')
+    }
+  } else {
+    uploadFileState.value = false
   }
 }
 

@@ -98,11 +98,6 @@ const routes = [
         path: '/user/test',
         name: 'userTest',
         component:() => import('@/view/user-view/exam/UserExamTestPaper.vue')
-    },
-    {
-        path: '/test',
-        name: 'testView',
-        component:() => import('@/view/TestView.vue')
     }
 ]
 

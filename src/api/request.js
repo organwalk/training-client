@@ -1,5 +1,6 @@
 import axios from 'axios'
 import {ElMessage} from "element-plus";
+import {nonWarningMsg} from "@/config/globalConfig";
 
 const request = (config) => {
     const instance = axios.create({
@@ -23,13 +24,15 @@ const request = (config) => {
                     setTimeout(()=>{
                         sessionStorage.clear()
                         window.location.href = '/login'
-                    })
+                    }, 1000)
                 }else {
-                    ElMessage.warning({
-                        message:response.data.msg,
-                        grouping:true,
-                        type:'error'
-                    })
+                    if (!nonWarningMsg.includes(response.data.msg)){
+                        ElMessage.warning({
+                            message:response.data.msg,
+                            grouping:true,
+                            type:'error'
+                        })
+                    }
                 }
             }
             if (response.status !== 200){

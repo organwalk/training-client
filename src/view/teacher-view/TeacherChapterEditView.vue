@@ -73,7 +73,7 @@ const disableResourceTypeRadio = (contentType) => {
   if (contentType.includes('md')) {
     nonVideo.value = true
     radioVal.value = 'Markdown文档'
-  } else if (contentType.includes('mp4')) {
+  } else if (contentType.includes('mp4') || contentType.includes('mkv')) {
     nonMarkdown.value = true
     radioVal.value = '讲解视频录像'
   }
@@ -669,9 +669,9 @@ onMounted(async () => {
                                   :is-exit-full-screen="isExitFullScreen"
                                   :seek-time="seekTime"
                                   :width="640" :height="360"
-                                  @get-current-time="(time) => { currentTime = time}"
-                                  @get-seeking-time="(time) => { seekingTime = time}"
-                                  @get-play="(state) => {isPauseVideo = !state; isPlay = state}"/>
+                                  @get-current-time="time => currentTime = time"
+                                  @get-seeking-time="time => seekingTime = time"
+                                  @get-play="state => {isPauseVideo = !state;isPlay = state}"/>
                         <br/>
                       </el-col>
                       <!-- 视频测试题 -->

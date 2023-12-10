@@ -215,7 +215,8 @@ const validEdit = (basic, stateList, teacherList, studentList) => {
 }
 
 const getTeacherProgress = (val) => {
-  return typeof val === "undefined" ? 0 : Math.round(val * 100)
+  console.log(val)
+  return typeof val === "undefined" ? 0 : parseInt(String(val * 100))
 }
 </script>
 
@@ -289,20 +290,21 @@ const getTeacherProgress = (val) => {
             <el-table :data="teacherTableList" :default-sort="{ prop: 'id', order: 'descending' }"
                       style="width: 100%"
                       height="350"
-                      border
+                      border empty-text="暂未添加教师"
                       highlight-current-row stripe v-loading="loading">
               <el-table-column type="expand">
                 <template #default="props">
                   <el-card shadow="never">
                     <h3>{{ props.row.label }}老师所授课程情况如下：</h3>
-                    <el-table :data="props.row.progress.lesson_progress"
-                              height="350"
+                    <!--suppress JSValidateTypes -->
+                    <el-table :data="props.row['progress']['lesson_progress']"
+                              height="350" empty-text="暂未授课"
                               border highlight-current-row>
                       <el-table-column label="课程ID" prop="id" />
                       <el-table-column label="课程名称" prop="lesson_name" />
                       <el-table-column label="课程进度">
                         <template #default="scope">
-                          <el-progress :percentage="getTeacherProgress(scope.row.total_progres)"/>
+                          <el-progress :percentage="getTeacherProgress(scope.row['total_progress'])"/>
                         </template>
                       </el-table-column>
                     </el-table>
@@ -314,7 +316,7 @@ const getTeacherProgress = (val) => {
               <el-table-column prop="label" label="讲师姓名"/>
               <el-table-column label="讲师总体授课进度">
                 <template #default="scope">
-                  <el-progress :percentage="getTeacherProgress(scope.row.all_total_progress)"/>
+                  <el-progress :percentage="getTeacherProgress(scope.row.progress['all_total_progress'])"/>
                 </template>
               </el-table-column>
             </el-table>

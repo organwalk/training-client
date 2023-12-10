@@ -20,6 +20,7 @@ import LikeFatherCommentNotification from "@/components/notification/LikeFatherC
 import LikeChildrenCommentNotification from "@/components/notification/LikeChildrenCommentNotification.vue";
 import TestNotification from "@/components/notification/TestNotification.vue";
 import {withLoading} from "@/utils/functionUtil";
+import UserCenterDialog from "@/components/dialog/UserCenterDialog.vue";
 
 
 const store = useDeptStore()
@@ -118,6 +119,13 @@ const loadingOtherTypeNotificationList = withLoading(async (offset) => {
   }
 }, loading)
 
+const showUserCenter = ref(false)
+const closeUserCenter = (des) => {
+  if (des){
+    showUserCenter.value = false
+  }
+}
+
 
 onBeforeMount(async () => {
   getPushClient()
@@ -147,7 +155,7 @@ onBeforeMount(async () => {
           <el-badge :is-dot="showNotification">
             <el-button :icon="Bell" @click="notifyDrawer = true" circle v-btn/>
           </el-badge>&nbsp;&nbsp;&nbsp;
-          <el-button :icon="Reading" circle v-btn/>
+          <el-button :icon="Reading" circle v-btn @click="showUserCenter = true"/>
         </el-col>
       </el-row>
     </el-card>
@@ -230,6 +238,8 @@ onBeforeMount(async () => {
       </div>
     </el-card>
   </el-drawer>
+
+  <user-center-dialog :dialog="showUserCenter" @click="closeUserCenter"/>
 </template>
 
 <style scoped>

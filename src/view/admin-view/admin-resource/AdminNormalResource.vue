@@ -156,16 +156,16 @@ onBeforeMount(async () => {
     <el-table :data="dataList" v-loading="loading" height="450">
       <el-table-column type="index" fixed/>
       <el-table-column prop="id" label="资源RID" sortable/>
-      <el-table-column prop="resource_name" label="资源名称"/>
+      <el-table-column prop="resource_name" label="资源名称" show-overflow-tooltip/>
       <el-table-column prop="deptInfo.dept_name" label="所属部门"
                        v-if="dataList.length !== 0 && dataList[0].hasOwnProperty('deptInfo')"/>
       <el-table-column prop="tagInfo.tag_name" label="分类标签"
                        v-if="dataList.length !== 0 && dataList[0].hasOwnProperty('tagInfo')"/>
       <el-table-column prop="upInfo.realName" label="上传者"/>
-      <el-table-column prop="up_datetime" label="上传时间"/>
+      <el-table-column prop="up_datetime" label="上传时间" min-width="110"/>
       <el-table-column label="操作" fixed="right" min-width="110">
         <template #default="scope">
-          <el-button size="small" @click=editNormalResource(scope.row.id)>编辑</el-button>
+          <el-button size="small" @click=editNormalResource(scope.row.id)>重传</el-button>
           <el-button size="small" type="primary" @click="downloadResource(scope.row.id)">下载</el-button>
           <el-button size="small" type="danger" @click="deleteNormalResourceFromApi(scope.row.id)">删除</el-button>
         </template>

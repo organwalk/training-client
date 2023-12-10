@@ -129,7 +129,6 @@ const addDeptPeople = async () => {
 
 //删除部门成员
 const deleteDeptPeople = async () => {
-  console.log(props.uid)
   const res = await deleteDeptMember(props.dept_id, props.uid)
   if (res.code === 2002) {
     ElMessage.success(res.msg)
@@ -222,29 +221,29 @@ onBeforeMount(() => {
     </el-form>
     <span v-if="props.title ==='删除部门'">是否确认删除此部门？该操作不可撤回</span>
 
-    <span v-if="props.title ==='删除成员'">是否确认删除此成员？该操作不可撤回</span>
+    <span v-if="props.title ==='删除成员'">是否确认移除此成员？</span>
 
     <template #footer>
   <span class="dialog-footer">
     <el-button @click="closeDialog">取消</el-button>
 
-    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="addDept" v-if="props.title ==='新增部门'">
+    <el-button type="primary" color="#002fa7" :loading="loading" @click="addDept" v-if="props.title ==='新增部门'">
       添加
     </el-button>
 
-    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="editDept" v-if="props.title === '编辑部门'">
+    <el-button type="primary" color="#002fa7" :loading="loading" @click="editDept" v-if="props.title === '编辑部门'">
       确定编辑
     </el-button>
 
-    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="deleteDept" v-if="props.title ==='删除部门'">
+    <el-button type="primary" color="#002fa7" :loading="loading" @click="deleteDept" v-if="props.title ==='删除部门'">
       确定删除
     </el-button>
 
-    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="addDeptPeople()" v-if="props.title ==='新增成员'">
+    <el-button type="primary" color="#002fa7" :loading="loading" @click="addDeptPeople()" v-if="props.title ==='新增成员'">
       添加
     </el-button>
 
-    <el-button type="primary" color="#002fa7" :loading="props.loading" @click="deleteDeptPeople()" v-if="props.title ==='删除成员'">
+    <el-button type="primary" color="#002fa7" :loading="loading" @click="deleteDeptPeople()" v-if="props.title ==='删除成员'">
       确定删除
     </el-button>
 

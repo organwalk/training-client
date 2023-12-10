@@ -129,3 +129,13 @@ export function getOverTestPaperState(studentId, testId){
 export function getReplyList(commentId, studentId, offset){
     return http.get('/learn/v1/reply/' + commentId + '/' + studentId + '/' + '/3/' + offset)
 }
+
+// 获取学员测试评估报告列表
+export function getReportList(testId, pageSize, offset){
+    return http.get('/learn/v1/test/report/' + testId + '/' + pageSize + '/' + offset)
+}
+
+// 获取测验的各项平均成绩列表
+export function getAvgScoreList(lessonId, pageSize, offset){
+    return http.get('/learn/v1/test/score/' + lessonId + '/' + pageSize +'/' + offset)
+}

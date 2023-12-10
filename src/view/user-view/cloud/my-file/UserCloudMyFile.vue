@@ -32,11 +32,11 @@ const loadingUserResourceList = withLoading(async (offset) => {
     dataListTotal.value = res.total
     dataList.value = res.data
     copyOriginDataList(dataList.value)
-    userName.value = res.data[0]['upInfo']['realName']
     if (dataListTotal.value <= 6) {
       showViewMore.value = false
     }
   }
+  userName.value = sessionStorage.getItem("username")
 }, loading)
 
 // 拷贝一份原始数据

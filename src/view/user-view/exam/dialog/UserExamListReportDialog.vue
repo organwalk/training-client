@@ -73,7 +73,11 @@ const closeDialog = (des) => {
         <el-statistic title="综合成绩" :value="score"/>
         <el-divider direction="vertical"/>
         <!--suppress JSValidateTypes -->
-        <el-statistic title="评估等级" :value="level" />
+        <el-statistic title="评估等级" :value-style="{display:'none'}">
+          <template #suffix>
+            {{ level }}
+          </template>
+        </el-statistic>
         <el-divider direction="vertical" border-style="dashed"/>
         <el-statistic title="考核排名" :value="rank" />
       </el-row>

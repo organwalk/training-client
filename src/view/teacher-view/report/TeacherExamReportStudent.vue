@@ -1,7 +1,7 @@
 <script setup>
-import {onBeforeMount, ref, watchEffect} from "vue";
+import {ref, watchEffect} from "vue";
 import {withLoading} from "@/utils/functionUtil";
-import {getTestPaperList} from "@/api/learn-api";
+import {getReportList, getTestPaperList} from "@/api/learn-api";
 import {useRouter} from "vue-router";
 
 // 加载
@@ -11,83 +11,73 @@ const loading = ref(false)
 //路由
 const router = useRouter()
 
-
-// 获取试卷列表
-const testList = ref()
+// 加载试卷列表
+const lessonId = ref()
+const testList = ref([])
+const testId = ref()
 const loadingTestPaper = withLoading(async (pageSize, offset) => {
   const res = await getTestPaperList(sessionStorage.getItem('uid'), lessonId.value, pageSize, offset)
   if (res.code === 2002) {
     testList.value = res.data
+    testId.value = testList.value[0]['id']
+  } else {
+    testList.value = []
+    dataList.value = []
   }
 }, loading)
 
-
-// 获取课程ID
-const lessonId = ref()
 watchEffect(async () => {
-  if (router.currentRoute.value.query.lessonId) {
+  if (router.currentRoute.value.query.lessonId){
     lessonId.value = router.currentRoute.value.query.lessonId
-    await loadingTestPaper(10, 0)
+    await loadingTestPaper(999999, 0)
   }
 })
 
 
 // 切换试卷时
 const whenChangeTestPaper = (element) => {
-  const id = testList[element].id
-  console.log(id)
+  testId.value = testList.value[element].id
 }
 
 
-// 获取评估报告表格
-const dataList = ref([
-  {
-    "student_info": {
-      "id": 1,
-      "real_name": "张三"
-    },
-    "score": {
-      "composite_score": 80,
-      "must_type_composite_score": 50,
-      "important_type_composite_score": 20,
-      "normal_type_composite_score": 10,
-      "level": "优秀"
-    }
-  },
-  {
-    "student_info": {
-      "id": 21,
-      "real_name": "李四"
-    },
-    "score": {
-      "composite_score": 60,
-      "must_type_composite_score": 20,
-      "important_type_composite_score": 30,
-      "normal_type_composite_score": 10,
-      "level": "合格"
-    }
-  },
-  {
-    "student_info": {
-      "id": 31,
-      "real_name": "王五"
-    },
-    "score": {
-      "composite_score": 50,
-      "must_type_composite_score": 20,
-      "important_type_composite_score": 20,
-      "normal_type_composite_score": 10,
-      "level": "未通过"
-    }
-  }
-])
+// 获取评估报告
+const emptyText = ref('暂无相关记录')
+const dataList = ref([])
 const originDataList = ref(dataList.value)
+const loadingReport = withLoading(async () => {
+  if (testList.value.length !== 0){
+    const obj = testList.value.find(item => item['id'] === testId.value)
+    if (new Date(obj['end_datetime']) < new Date()){
+      const res = await getReportList(testId.value, 999999, 0)
+      if (res.code === 2002) {
+        dataList.value = res.data
+        originDataList.value = res.data
+      }
+    }else {
+      dataList.value = []
+      originDataList.value = []
+      emptyText.value = '考试尚未结束，无法查看评估报告'
+    }
+  }else {
+    dataList.value = []
+    originDataList.value = []
+    emptyText.value = '考试尚未结束，无法查看评估报告'
+  }
+}, loading)
+
+watchEffect(async () => {
+  if (testId.value) {
+    emptyText.value = '暂无相关记录'
+    await loadingReport()
+  }
+})
+
 
 // 等级Map映射表
 const levelMap = {
   "优秀": "success",
   "合格": "info",
-  "未通过": "danger"
+  "不及格": "danger"
 }
 
 
@@ -103,23 +93,15 @@ const search = (keyword) => {
   keyword ? dataList.value = originDataList.value.filter(item => item['student_info']['real_name'].includes(keyword))
       : dataList.value = originDataList.value
 }
-
-onBeforeMount(async () => {
-  await loadingTestPaper(999999, 0)
-})
 </script>
 
 <template>
   <div v-loading="loading">
     <el-row>
-      <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
+      <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6" v-if="testList.length !== 0">
         <div style="height: 71vh">
           <el-menu
-              id="test-list"
-              style="height: 100vh"
-              default-active="0"
-              text-color="#A8ABB2"
-              active-text-color="#000000"
+              id="test-list" style="height: 100vh" default-active="0" text-color="#A8ABB2" active-text-color="#000000"
               @select="whenChangeTestPaper"
           >
             <el-menu-item v-for="(item, index) in testList" :key="index" :index="String(index)">
@@ -130,16 +112,18 @@ onBeforeMount(async () => {
       </el-col>
       <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="18">
         <div style="height: 71vh;margin-top: 10px;margin-left: 10px;margin-right: 10px">
-          <el-input v-model="searchKey" @input="search" placeholder="搜索学员姓名" rows="1" type="textarea"/>
+          <el-input v-model="searchKey" @input="search" placeholder="搜索学员姓名" rows="1" type="textarea"
+                    :disabled="dataList.length === 0"/>
           <el-table :data="dataList"
                     :default-sort="{ prop: 'score.composite_score', order: 'descending' }"
+                    :empty-text="emptyText"
                     border style="margin-top: 10px">
             <el-table-column prop="student_info.real_name" label="学员姓名"/>
             <el-table-column label="评级"
                              :filters="[
         { text: '优秀', value: '优秀' },
         { text: '合格', value: '合格' },
-        { text: '未通过', value: '未通过' }]"
+        { text: '不及格', value: '不及格' }]"
                              :filter-method="filterLevel">
               <template #default="scope">
                 <el-tag :type="levelMap[scope.row['score']['level']]">{{ scope.row['score']['level'] }}</el-tag>
