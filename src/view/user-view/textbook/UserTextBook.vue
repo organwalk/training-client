@@ -548,7 +548,7 @@ onBeforeMount(async () => {
         <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'md'">
           <v-md-preview :text="mdContent"></v-md-preview>
         </el-card>
-        <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'mp4'" align="center">
+        <el-card v-loading="loading" shadow="never" style="border: none" v-if="resourceType === 'mp4' || resourceType === 'mkv'" align="center">
           <br/><br/>
           <tc-video :video-url="videoUrl"
                     :pause-time-list="videoTest.pauseTimeList"
@@ -819,7 +819,6 @@ onBeforeMount(async () => {
   <video-test-dialog :dialog="showVideoTest"
                      :test-obj="question"
                      @close="closeVideoTest"/>
-
 </template>
 
 <!--suppress CssUnusedSymbol -->

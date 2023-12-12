@@ -136,6 +136,7 @@ const pushRoute = (id) => {
         lessonId: id
       }
     })
+    nowLessonIndex.value = String(lessonList.value.findIndex(item => item["id"] === Number(router.currentRoute.value.query.lessonId)))
   } else if (router.currentRoute.value.fullPath.includes('/teacher/exam')) {
     router.push({
       path: '/teacher/exam',
@@ -143,6 +144,7 @@ const pushRoute = (id) => {
         lessonId: id
       }
     })
+    nowLessonIndex.value = String(lessonList.value.findIndex(item => item["id"] === Number(router.currentRoute.value.query.lessonId)))
   }
 }
 const setActiveValue = (id, lesson_name, total_progress) => {

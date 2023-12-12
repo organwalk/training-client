@@ -15,7 +15,9 @@ import {
 } from "@/api/plan-api";
 import {ElMessage} from "element-plus";
 import {arraysEqual, getArrayChanges, objectsIsNull} from "@/utils/dataUtil";
+import {usePushNotificationStore} from "@/store/store";
 
+const pushStore = usePushNotificationStore()
 const props = defineProps({
   showPlanEditDialog: Boolean,
   basicInfo: Object,
@@ -186,11 +188,20 @@ const edit = async () => {
           errorMarks.push('stuReduceMark')
         }
       }
+      noticePlan(changes.decreased, "decreased")
     }
     if (changes.increased.length !== 0) {
       const addRes = await addStudentToPlan(planId.value, changes.increased)
       if (addRes.code === 2002){
-        successMsgList.push(addRes.msg)
+        if (addRes.msg.includes("添加成功，但部分员工未被分配部门，无法被纳入培训计划")){
+          let integerArray = addRes.msg.split(":")[1].replace('[','').replace(']','').split(',').map(Number)
+          successMsgList.push(addRes.msg.split(":")[0])
+          noticePlan(integerArray, "add")
+        }else {
+          successMsgList.push(addRes.msg)
+          noticePlan(changes.increased, "add")
+        }
+
       }else {
         errorMarks.push('addMark')
       }
@@ -208,6 +219,17 @@ const edit = async () => {
       closeDialog("edit")
     }
   }
+}
+
+const noticePlan = (userList, type) => {
+  let content = type === 'add' ? "您被纳入了一个培训计划" : "您被移出培训计划"
+  let obj = {
+    'sourceType': 'plan',
+    'content': content,
+    'quoteId': planId.value,
+    'receiverIdList': userList
+  }
+  pushStore.setPushBody(obj)
 }
 
 const validEdit = (basic, stateList, teacherList, studentList) => {

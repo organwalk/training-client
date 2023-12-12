@@ -100,7 +100,7 @@ export function processProgress(objList) {
             obj.total_progress = 0;
         } else {
             // 将其他类型的值转换为整数并乘以 100
-            obj.total_progress = obj.total_progress * 100 || 0;
+            obj.total_progress = parseInt(String(obj.total_progress * 100)) || 0;
         }
     });
     return objList;

@@ -126,7 +126,7 @@ const deleteResource = async (rId) => {
       <el-image :src="myFileIcon" fit="cover" style="border-radius: 50%;height: 20vh"></el-image>
       <div style="margin-top: 10px;margin-bottom: 10px">
         <el-row justify="center">
-          <el-statistic title="部门名" :value-style="{display:'none'}">
+          <el-statistic title="培训部门" :value-style="{display:'none'}">
             <template #suffix>
               <span>{{ deptName }}</span>
             </template>

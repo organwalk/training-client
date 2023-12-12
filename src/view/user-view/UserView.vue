@@ -30,11 +30,11 @@ const notificationState = computed(() => notificationStore.showNotification)
 const router = useRouter()
 const loading = ref(false)
 
-const pushCloud = () => {
+const pushCloud =  () => {
   if (deptId.value || sessionStorage.getItem("dept_id")) {
     router.push('/user/cloud')
   } else {
-    ElMessage.warning("请等待当前页面加载完毕")
+    ElMessage.warning("仅对培训人员开放")
   }
 }
 
@@ -209,6 +209,7 @@ onBeforeMount(async () => {
       </el-scrollbar>
       <br/>
       <div v-loading="loading">
+        <el-empty v-if="notificationList.length === 0" description="暂未收到任何通知"/>
         <el-card style="margin-bottom: 10px; border-radius: 20px; user-select: none"
                  shadow="hover"
                  v-for="(item, index) in notificationList" :key="index">

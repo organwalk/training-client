@@ -4,9 +4,10 @@ import {withLoading} from "@/utils/functionUtil";
 import {getLessonListByPlanId, getStudentAllPlanList} from "@/api/learn-api";
 import {useRouter} from "vue-router";
 import {useDeptStore} from "@/store/store";
-import {planStateConfig} from "../../../config/globalConfig";
+import {planStateConfig} from "@/config/globalConfig";
 
 const loading = ref(false)
+const empty = ref(false)
 
 // 获取培训计划列表
 const planList = ref([])
@@ -21,11 +22,15 @@ const store = useDeptStore()
 const loadingPlanList = withLoading(async () => {
   const res = await getStudentAllPlanList(sessionStorage.getItem("uid"))
   if (res.code === 2002) {
-    planList.value = res.data
-    sessionStorage.setItem("dept_id", planList.value[planIndex.value]['dept_id']);
-    store.setDeptId(planList.value[planIndex.value]['dept_id'])
-    setPlanDetail()
-    sessionStorage.setItem("plan_state", planState.value)
+    if (res.data.length !== 0){
+      planList.value = res.data
+      sessionStorage.setItem("dept_id", planList.value[planIndex.value]['dept_id']);
+      store.setDeptId(planList.value[planIndex.value]['dept_id'])
+      setPlanDetail()
+      sessionStorage.setItem("plan_state", planState.value)
+    }else{
+      empty.value = true
+    }
   }
 }, loading)
 const setPlanDetail = () => {
@@ -43,6 +48,7 @@ const whenChangePlan = async (val) => {
 watch(planIndex, async (newVal, oldVal) => {
   if (newVal !== oldVal){
     planId.value = planList.value[planIndex.value]['id']
+    sessionStorage.setItem("dept_id", planList.value[planIndex.value]['dept_id']);
     setPlanDetail()
     await loadingLessonList()
   }
@@ -73,13 +79,16 @@ const entryChapter = (lessonId) => {
 // 生命周期钩子
 onBeforeMount(async () => {
   await loadingPlanList()
-  await loadingLessonList()
+  if (planId.value){
+    await loadingLessonList()
+  }
 })
 </script>
 
 <template>
   <el-progress :percentage="50" color="#333" :duration="4" :indeterminate="true" :show-text="false" v-if="loading"/>
-  <el-row style="height: 90vh" v-if="!loading">
+  <el-empty v-if="!loading && empty" description="暂未被纳入任何培训计划"/>
+  <el-row style="height: 90vh" v-if="!loading && !empty">
     <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
       <el-card shadow="never"
                style="border-radius: 0; height: 90vh;border-top: none;border-left: none;border-bottom: none;overflow-y: auto">

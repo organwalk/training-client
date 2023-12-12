@@ -1,15 +1,14 @@
 <script setup>
 
 import TcContainerFullRow from "@/components/container/tc-container-full-row.vue";
-import {Search, Edit, Delete} from "@element-plus/icons-vue";
+import {Search, Edit} from "@element-plus/icons-vue";
 import TcButtonAdd from "@/components/button/tc-button-add.vue";
 import {onBeforeMount, reactive, ref, watch} from "vue";
 import AdminPlanDialog from "@/view/admin-view/dialog/AdminPlanDialog.vue";
 import {withLoading} from "@/utils/functionUtil";
 import {getDeptInfo} from "@/api/dept-api";
 import TcPagination from "@/components/container/tc-pagination.vue";
-import {deleteTrainingPlanByPlanId, getAllPlanByKeyword, getAllPlanList, getPlanListByDeptId} from "@/api/plan-api";
-import {ElMessage} from "element-plus";
+import {getAllPlanByKeyword, getAllPlanList, getPlanListByDeptId} from "@/api/plan-api";
 import TcDeptSelect from "@/components/select/tc-dept-select.vue";
 import AdminPlanEditDialog from "@/view/admin-view/dialog/AdminPlanEditDialog.vue";
 import {getPlanProgress} from "@/api/progress-api";
@@ -102,15 +101,6 @@ const getNewPageNumber = async (val) => {
   }
 }
 
-// 删除培训计划
-const deletePlan = withLoading(async (planId) => {
-  const res = await deleteTrainingPlanByPlanId(planId)
-  if (res.code === 2002){
-    ElMessage.success(res.msg)
-    dataList.value.splice(dataList.value.findIndex(item => item.id === planId), 1)
-  }
-}, loading)
-
 // 模糊查询培训计划
 const searchPlanByKeyword = withLoading(async (keyword, offset) => {
   const res = await getAllPlanByKeyword(keyword, offset)
@@ -200,8 +190,8 @@ const edit = (item) => {
       </el-row>
     </tc-container-full-row><br/>
 <!--    培训计划列表区域-->
-    <el-empty v-if="showEmpty"/>
-    <el-row :gutter="15" style="height: 70vh;overflow-y: auto"  v-if="!showEmpty || !loading">
+    <el-empty v-if="showEmpty" description="暂未制定培训计划"/>
+    <el-row :gutter="15" style="height: 70vh;overflow-y: auto"  v-if="!showEmpty">
       <el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8" v-for="(item, index) in dataList" :key="index">
         <el-card shadow="never" style="position:relative;height: 300px;margin-bottom: 15px;border-radius: 0">
           <el-row>
@@ -211,7 +201,6 @@ const edit = (item) => {
             <el-col :xs="5" :sm="5" :md="5" :lg="5" :xl="5" align="right">
               <el-button type="primary" :icon="Edit" circle size="small"
                          @click="edit(item)"/>
-              <el-button type="danger" :icon="Delete" circle size="small" @click="deletePlan(item.id)"/>
             </el-col>
           </el-row><br/>
           <tc-container-full-row>
@@ -242,7 +231,7 @@ const edit = (item) => {
     </el-row>
     <!--  分页器区域-->
     <tc-container-full-row style="margin-top: auto;">
-      <tc-pagination :total="total" @page-current-change="getNewPageNumber"/>
+      <tc-pagination v-if="!showEmpty" :total="total" @page-current-change="getNewPageNumber"/>
     </tc-container-full-row>
 
 <!--    对话框区域-->
@@ -254,6 +243,7 @@ const edit = (item) => {
   </div>
 </template>
 
+<!--suppress CssUnusedSymbol -->
 <style scoped>
 .el-pagination {
   justify-content: center;

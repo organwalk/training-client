@@ -28,5 +28,7 @@ export const planStateConfig = {
 export const nonWarningMsg = [
     '该视频教程下没有测试',
     '尚无考试待开始',
-    '当前试卷列表为空'
+    '当前试卷列表为空',
+    '当前用户的上传资源文件列表为空',
+    '该类别下不存在通知'
 ]

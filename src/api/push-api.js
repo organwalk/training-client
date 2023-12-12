@@ -39,6 +39,12 @@ export function getPushClient(){
             type: 'success',
             duration: 0
         })
+        if (event.data === '您被移出培训计划' || event.data === '您被纳入了一个培训计划'){
+            setTimeout(() => {
+                sessionStorage.removeItem("dept_id")
+                location.reload()
+            }, 1000)
+        }
     };
     client.onerror = () => {
         ElMessage.warning("丢失与推送服务的连接，可能影响您接收通知的实时性")

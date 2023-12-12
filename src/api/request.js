@@ -14,7 +14,7 @@ const request = (config) => {
             if (response.headers['content-type'] !== "application/json") {
                 return response; // 返回Blob对象，不进行处理
             }
-            if (response.data.code!==2002){
+            if (response.data.code!==2002 && response.data.msg){
                 if (response.data.code === 4001){
                     ElMessage.error({
                         message:response.data.msg,
