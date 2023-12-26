@@ -75,7 +75,7 @@ export function sendFatherReply(obj){
     return http.post('/learn/v1/lesson/reply', obj)
 }
 
-// 根据课程和章节ID获取评论列表
+// 回复子评论
 export function sendChildrenReply(obj){
     return http.post('/learn/v1/lesson/reply/thread', obj)
 }
@@ -102,7 +102,7 @@ export function sendNote(userId, lessonId, chapterId, obj){
 
 // 根据笔记ID获取笔记
 export function getNote(noteId){
-    return http.get('/resource/v2/file/note/' + noteId)
+    return http.get('/resource/v1/file/note/' + noteId)
 }
 
 // 学生获取指定教师课程的试卷列表

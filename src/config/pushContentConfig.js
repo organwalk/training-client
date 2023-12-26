@@ -5,3 +5,8 @@ export const pushContent = {
     "children_like":"您的回复被点赞",
     "test":"您有一次测试待参加"
 }
+
+export const pushMessageRegex = {
+    reply: /(text|lessonName|chapterName|comment)/,
+    test: /(text|lessonName)/
+}

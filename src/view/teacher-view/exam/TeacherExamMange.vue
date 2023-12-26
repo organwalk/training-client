@@ -6,14 +6,10 @@ import {deleteTest, getTestPaperList, setRelease} from "@/api/learn-api";
 import AddExamDialog from "@/view/teacher-view/exam/dialog/AddExamDialog.vue";
 import {ElMessage, ElNotification} from "element-plus";
 import EditExamDialog from "@/view/teacher-view/exam/dialog/EditExamDialog.vue";
-import {pushContent} from "@/config/pushContentConfig";
-import {usePushNotificationStore} from "@/store/store";
-import {getStudentLearningProgressByLessonId} from "@/api/progress-api";
 
 const router = useRouter()
 const lessonId = ref()
 const loading = ref(false)
-const pushStore = usePushNotificationStore()
 
 
 // 切换tab推送指定路由
@@ -78,7 +74,6 @@ const release = withLoading(async (testId) => {
   const res = await setRelease(testId)
   if (res.code === 2002){
     ElMessage.success(res.msg)
-    await noticeReleaseTest(testId)
     await loadingTestPaper(10, 0)
   }else {
     if (String(res.msg).includes("时间冲突")){
@@ -94,21 +89,6 @@ const release = withLoading(async (testId) => {
     }
   }
 }, loading)
-const noticeReleaseTest = async (testId) => {
-  const sourceType = 'test'
-  let idList = []
-  const res = await getStudentLearningProgressByLessonId(lessonId.value,999999, 0)
-  if (res.code === 2002){
-    idList.push(...res.data.map(item => item["student_id"]))
-    let obj = {
-      'sourceType': sourceType,
-      'content': pushContent[sourceType],
-      'quoteId': testId,
-      'receiverIdList': idList
-    }
-    pushStore.setPushBody(obj)
-  }
-}
 
 // 编辑试卷信息
 const showEditDialog = ref(false)

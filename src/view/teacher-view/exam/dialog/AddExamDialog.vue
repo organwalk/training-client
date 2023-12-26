@@ -32,6 +32,11 @@ const examInfo = reactive({
   start_datetime: String(plusDateTimeAboutHour(getNowDateTime(), 1)),
   end_datetime: String(plusDateTimeAboutHour(getNowDateTime(), 2))
 })
+watchEffect(() => {
+  if (router.currentRoute.value.query.lessonId){
+    examInfo.lesson_id = router.currentRoute.value.query.lessonId
+  }
+})
 const submit = withLoading(async () => {
   examInfo.start_datetime = getDateTimeISO8601(new Date(examInfo.start_datetime))
   examInfo.end_datetime = getDateTimeISO8601(new Date(examInfo.end_datetime))

@@ -20,8 +20,6 @@ import TcVideo from "@/components/video/tc-video.vue";
 import {videoURL} from "@/api/url-api";
 import {getVideoTestList} from "@/api/plan-api";
 import VideoTestDialog from "@/components/dialog/video-test-dialog.vue";
-import {usePushNotificationStore} from "@/store/store";
-import {pushContent} from "@/config/pushContentConfig";
 import TcPagination from "@/components/container/tc-pagination.vue";
 
 const loading = ref(false)
@@ -30,7 +28,6 @@ const resourceType = ref(router.currentRoute.value.query.resourceType)
 const resourceId = ref(router.currentRoute.value.query.resourceId)
 const lessonId = ref(router.currentRoute.value.query.lessonId)
 const chapterId = ref(router.currentRoute.value.query.chapterId)
-const pushStore = usePushNotificationStore()
 
 
 // 文档
@@ -125,24 +122,7 @@ const likeFatherComment = async (item) => {
       item['like_state'] = 1
       item['like_sum'] += 1
     }
-  } else if (res.code === 2002) {
-    if (res.msg === "点赞成功！") {
-      noticeFatherLike(item)
-    }
   }
-}
-// 点赞主评论通知
-const noticeFatherLike = (item) => {
-  const sourceType = 'father_like'
-  let idList = []
-  idList.push(item['user_id'])
-  let obj = {
-    'sourceType': sourceType,
-    'content': pushContent[sourceType],
-    'quoteId': item['id'],
-    'receiverIdList': idList
-  }
-  pushStore.setPushBody(obj)
 }
 
 
@@ -159,23 +139,10 @@ const replyFatherComment = async (item) => {
   if (res.code === 2002) {
     showFatherReply.value = null
     fatherReplyContent.value = ''
-    noticeReply(item['user_id'], res.data)
     await loadingReplyList(item['id'], 0)
   }
 }
-// 评论主评论通知
-const noticeReply = (noticeId, quoteId) => {
-  const sourceType = 'reply'
-  let idList = []
-  idList.push(noticeId)
-  let obj = {
-    'sourceType': sourceType,
-    'content': pushContent[sourceType],
-    'quoteId': quoteId,
-    'receiverIdList': idList
-  }
-  pushStore.setPushBody(obj)
-}
+
 
 
 // 加载评论回复
@@ -243,7 +210,6 @@ const replyChildrenComment = async (commentId, childItem) => {
   if (res.code === 2002) {
     showChildrenReply.value = null
     childrenReplyContent.value = ''
-    noticeReply(childItem['user_id'], res.data)
     await loadingReplyList(commentId, 0)
   }
 }
@@ -267,24 +233,7 @@ const likeChildrenComment = async (item) => {
       item['like_state'] = 1
       item['like_sum'] += 1
     }
-  } else if (res.code === 2002) {
-    if (res.msg === "点赞成功！") {
-      noticeChildrenLike(item)
-    }
   }
-}
-// 点赞子评论通知
-const noticeChildrenLike = (item) => {
-  const sourceType = 'children_like'
-  let idList = []
-  idList.push(item['user_id'])
-  let obj = {
-    'sourceType': sourceType,
-    'content': pushContent[sourceType],
-    'quoteId': item['id'],
-    'receiverIdList': idList
-  }
-  pushStore.setPushBody(obj)
 }
 
 

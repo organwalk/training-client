@@ -2,6 +2,7 @@ import http from "@/api/http";
 import {ElMessage, ElNotification} from "element-plus";
 import {useNotificationStore, usePushNotificationStore} from "@/store/store";
 import {computed, watchEffect} from "vue";
+import {pushMessageRegex} from "@/config/pushContentConfig";
 
 // 获取所有的通知列表
 export function getAllNotificationList(uid, pageSize, offset){
@@ -33,9 +34,15 @@ export function getPushClient(){
     };
     client.onmessage = (event) => {
         notificationStore.isTrue()
+        let message = event.data
+        if (pushMessageRegex.reply.test(event.data)){
+            message = JSON.parse(event.data).text
+        }else if (pushMessageRegex.test.test(event.data)){
+            message = JSON.parse(event.data).text
+        }
         ElNotification({
             title: '通知提醒',
-            message: event.data,
+            message: message,
             type: 'success',
             duration: 0
         })
